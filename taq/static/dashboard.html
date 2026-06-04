@@ -1,64 +1,8 @@
 <!doctype html>
-<html lang="es-ES"><head><script data-od-sandbox-shim>(function(){
-  function makeStore(){
-    var data = {};
-    var api = {
-      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
-      setItem: function(k, v){ data[k] = String(v); },
-      removeItem: function(k){ delete data[k]; },
-      clear: function(){ data = {}; },
-      key: function(i){ return Object.keys(data)[i] || null; }
-    };
-    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
-    return api;
-  }
-  function tryShim(name){
-    var works = false;
-    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
-    catch (_) { works = false; }
-    if (works) return;
-    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
-    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
-  }
-  tryShim('localStorage');
-  tryShim('sessionStorage');
-  document.addEventListener('click', (e) => {
-    if (!e.target || !(e.target instanceof Element)) return;
-    var link = e.target.closest('a[href]');
-    if (!link) return;
-    var href = link.getAttribute('href');
-    if (href === null) return;
-    var isAnchor = href.startsWith('#') || href === '';
-    if (isAnchor) {
-      e.preventDefault();
-      if (href === '' || href === '#') {
-        window.scrollTo({ top: 0 });
-        history.replaceState(null, '', ' ');
-      } else {
-        var targetId = href.slice(1);
-        var target = targetId ? document.getElementById(targetId) : null;
-        if (target) {
-          target.scrollIntoView();
-          location.hash === href && history.replaceState(null, '', ' ');
-          location.hash = href;
-        }
-      }
-    } else if (link.getAttribute('target') === '_blank') {
-      e.preventDefault();
-      let safe = false;
-      try {
-        var url = new URL(href, location.href);
-        safe =
-          url.protocol === 'http:' ||
-          url.protocol === 'https:' ||
-          url.protocol === 'mailto:';
-      } catch (_) {}
-      safe && window.open(href, '_blank', 'noopener,noreferrer');
-    }
-  });
-})();</script>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="es-ES">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TaQ Engine · Dashboard</title>
   <style>
     :root{
@@ -76,7 +20,6 @@
       --shadow:0 26px 64px rgba(14, 33, 63, .11);
       --shadow-soft:0 16px 40px rgba(14, 33, 63, .08);
       --radius:24px;
-      --ease-smooth:cubic-bezier(.22, 1, .36, 1);
       --font-display:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     }
@@ -173,7 +116,7 @@
       padding:13px 14px;
       border-radius:18px;
       cursor:pointer;
-      transition:background .24s var(--ease-smooth), color .24s var(--ease-smooth), border-color .24s var(--ease-smooth), transform .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth);
+      transition:background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -325,7 +268,6 @@
       border-radius:28px;
       box-shadow:var(--shadow-soft);
       padding:18px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .panel h2{
       margin:0;
@@ -352,36 +294,9 @@
       padding:16px;
       display:grid;
       gap:8px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .stat strong{font-size:.95rem}
     .stat span{color:var(--muted); font-size:.84rem; line-height:1.5}
-    .proof-strip{
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-      gap:12px;
-      margin-top:16px;
-    }
-    .proof{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px 15px;
-      display:grid;
-      gap:4px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
-    }
-    .proof span{
-      font-size:.74rem;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-      color:var(--muted);
-    }
-    .proof strong{
-      font-size:.84rem;
-      line-height:1.45;
-      letter-spacing:-.02em;
-    }
     .status-card{
       background:linear-gradient(180deg, rgba(16,62,118,1), rgba(15,32,56,1));
       color:#fff;
@@ -392,7 +307,6 @@
       box-shadow:0 24px 54px rgba(8, 18, 31, .18);
       overflow:hidden;
       position:relative;
-      transition:transform .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .status-card::before{
       content:"";
@@ -426,7 +340,6 @@
       padding:14px;
       display:grid;
       gap:10px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .progress-row .label{
       display:flex;
@@ -465,7 +378,6 @@
       border-radius:26px;
       box-shadow:var(--shadow-soft);
       padding:18px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .card h3{
       margin:0 0 14px;
@@ -503,7 +415,6 @@
       align-items:center;
       padding:12px 0;
       border-top:1px solid rgba(185,201,219,.5);
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .row:first-child{border-top:0; padding-top:0}
     .row strong{display:block}
@@ -539,7 +450,6 @@
       padding:16px;
       display:grid;
       gap:12px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .editor .steps{
       display:grid;
@@ -593,7 +503,6 @@
       display:grid;
       gap:8px;
       min-height:148px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .connector strong{font-size:.95rem}
     .connector span{color:var(--muted); font-size:.84rem; line-height:1.5}
@@ -633,7 +542,6 @@
       padding:18px;
       display:grid;
       gap:12px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .audit-filters{
       display:flex;
@@ -692,7 +600,6 @@
       padding:16px;
       display:grid;
       gap:10px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .quota-card .head{
       display:flex;
@@ -726,7 +633,6 @@
       align-content:start;
       overflow:hidden;
       position:relative;
-      transition:transform .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .plan::before{
       content:"";
@@ -751,81 +657,6 @@
       background:rgba(255,255,255,.08);
       width:max-content;
       padding:0 14px;
-    }
-    .panel:hover,
-    .card:hover,
-    .connector:hover,
-    .editor:hover,
-    .audit:hover,
-    .quota-card:hover,
-    .plan:hover,
-    .proof:hover,
-    .stat:hover,
-    .progress-row:hover,
-    .row:hover{
-      transform:translateY(-3px);
-      border-color:rgba(16,62,118,.16);
-      box-shadow:0 18px 36px rgba(14, 33, 63, .08);
-      background:#fff;
-    }
-    .sync-state{
-      margin-top:4px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      padding:14px 15px;
-      display:grid;
-      gap:10px;
-    }
-    .sync-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      font-size:.82rem;
-    }
-    .sync-head strong{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      color:#fff;
-      font-weight:600;
-      letter-spacing:-.02em;
-    }
-    .sync-head small{color:rgba(255,255,255,.72)}
-    .sync-dot{
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      background:#fff;
-      box-shadow:0 0 0 6px rgba(255,255,255,.1);
-      flex:none;
-      animation:breathe 2.8s var(--ease-smooth) infinite;
-    }
-    .sync-bars{
-      display:grid;
-      gap:8px;
-    }
-    .sync-bars span{
-      position:relative;
-      overflow:hidden;
-      height:9px;
-      border-radius:999px;
-      background:rgba(255,255,255,.12);
-    }
-    .sync-bars span.short{width:66%}
-    .sync-bars span::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      transform:translateX(-120%);
-      background:linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
-      animation:shimmer 2.4s linear infinite;
-    }
-    @keyframes shimmer{100%{transform:translateX(120%)}}
-    @keyframes breathe{
-      0%,100%{transform:scale(.92); box-shadow:0 0 0 6px rgba(255,255,255,.1)}
-      50%{transform:scale(1); box-shadow:0 0 0 8px rgba(255,255,255,.06)}
     }
     .footer-nav{
       display:none;
@@ -890,140 +721,45 @@
       *,*::before,*::after{animation:none!important; transition:none!important; scroll-behavior:auto!important}
     }
   </style>
-<style data-od-tweaks-bridge-style>
-[data-od-tweaks-hidden] .tw-panel {
-  transform: translateX(calc(100% + 32px)) !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-.tw-restore { display: none !important; }
-</style><script data-od-tweaks-bridge>(function(){
-  // Synchronously hide BEFORE the artifact body parses so the panel never
-  // flashes on initial paint. The host removes the attribute via postMessage
-  // once it knows the desired state.
-  document.documentElement.setAttribute('data-od-tweaks-hidden', '');
-
-  var suppressEcho = false;
-  var observer = null;
-
-  function panelEl(){ return document.querySelector('.tw-panel'); }
-
-  function applyClassesToPanel(visible){
-    var panel = panelEl();
-    if (panel) panel.classList.toggle('tw-hidden', !visible);
-  }
-
-  function setPanelVisible(visible){
-    suppressEcho = true;
-    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !visible);
-    applyClassesToPanel(visible);
-    // Clear flag after the MutationObserver has had a chance to fire for this
-    // change so we don't echo our own host-driven toggles back to the host.
-    Promise.resolve().then(function(){ suppressEcho = false; });
-  }
-
-  function postState(){
-    var panel = panelEl();
-    if (!panel) return;
-    try {
-      parent.postMessage({
-        type: 'od:tweaks-panel-state',
-        visible: !panel.classList.contains('tw-hidden'),
-      }, '*');
-    } catch (e) {}
-  }
-
-  function postAvailability(){
-    try {
-      parent.postMessage({
-        type: 'od:tweaks-available',
-        available: !!panelEl(),
-      }, '*');
-    } catch (e) {}
-  }
-
-  function attachObserver(){
-    var panel = panelEl();
-    if (!panel || observer) return;
-    observer = new MutationObserver(function(){
-      if (suppressEcho) return;
-      postState();
-    });
-    observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
-  }
-
-  function onReady(){
-    // Capture the panel authored visibility BEFORE we apply the host hidden
-    // attribute. The bridge sets data-od-tweaks-hidden synchronously in head
-    // (before the body parses), so on entry to onReady the attribute is
-    // always present even though the artifact may have authored the panel
-    // as default-visible. Reading the panel class first is the only place
-    // we can still observe the author intent. Then drive the attribute,
-    // classes, and posted state from that captured value so a default
-    // visible tw-panel reports visible:true and the toolbar toggle starts
-    // ON. Issue surfaced in PR #1643 review.
-    var panel = panelEl();
-    var initialVisible = !!panel && !panel.classList.contains('tw-hidden');
-    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !initialVisible);
-    applyClassesToPanel(initialVisible);
-    attachObserver();
-    postAvailability();
-    // Post the captured initial visibility so the toolbar toggle reflects
-    // the default state on mount. Without this the toggle reads OFF while
-    // a default-visible tw-panel artifact clearly shows its panel and the
-    // user would have to click toggle-on then toggle-off to actually hide.
-    postState();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', onReady);
-  } else {
-    onReady();
-  }
-
-  window.addEventListener('message', function(ev){
-    if (!ev.data || ev.data.type !== 'od:tweaks-panel-visible') return;
-    setPanelVisible(!!ev.data.visible);
-  });
-})();</script></head>
+</head>
 <body>
-  <div class="app" data-od-id="path-0">
-    <aside class="sidebar" data-od-id="path-0-0">
-      <a class="brand" href="index.html" data-od-id="path-0-0-0">
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="/">
         <div class="mark" aria-hidden="true"></div>
         <div>
           <strong>TaQ Engine</strong>
           <span>Operaciones · inteligencia de amenazas</span>
         </div>
       </a>
-      <div class="side-section" data-od-id="path-0-0-1">
+      <div class="side-section">
         <div class="side-label">Vistas</div>
         <div class="tabs" role="tablist" aria-label="Vistas del dashboard">
-          <button type="button" role="tab" aria-selected="true" data-view="overview" data-od-id="path-0-0-1-1-0">Visión general <small>01</small></button>
-          <button type="button" role="tab" aria-selected="false" data-view="playbooks" data-od-id="path-0-0-1-1-1">Flujos <small>02</small></button>
-          <button type="button" role="tab" aria-selected="false" data-view="connectors" data-od-id="path-0-0-1-1-2">Conectores <small>03</small></button>
-          <button type="button" role="tab" aria-selected="false" data-view="scoring" data-od-id="path-0-0-1-1-3">Puntuación <small>04</small></button>
-          <button type="button" role="tab" aria-selected="false" data-view="audit" data-od-id="path-0-0-1-1-4">Auditoría <small>05</small></button>
-          <button type="button" role="tab" aria-selected="false" data-view="billing" data-od-id="path-0-0-1-1-5">Uso y facturación <small>06</small></button>
+          <button type="button" role="tab" aria-selected="true" data-view="overview">Visión general <small>01</small></button>
+          <button type="button" role="tab" aria-selected="false" data-view="playbooks">Playbooks <small>02</small></button>
+          <button type="button" role="tab" aria-selected="false" data-view="connectors">Conectores <small>03</small></button>
+          <button type="button" role="tab" aria-selected="false" data-view="scoring">Puntuación <small>04</small></button>
+          <button type="button" role="tab" aria-selected="false" data-view="audit">Auditoría <small>05</small></button>
+          <button type="button" role="tab" aria-selected="false" data-view="billing">Uso y facturación <small>06</small></button>
         </div>
       </div>
-      <div class="side-card" data-od-id="path-0-0-2">
+      <div class="side-card">
         <span class="pill">Estado del espacio</span>
         <p>Diseño operativo, confianza enterprise y una interfaz pensada para trabajar en escritorio y móvil sin perder claridad.</p>
-        <a class="btn" href="landing.html" data-od-id="path-0-0-2-2">Abrir landing</a>
+        <a class="btn" href="landing.html">Abrir landing</a>
       </div>
     </aside>
 
-    <section class="main" data-od-id="path-0-1">
-      <header class="topbar" data-od-id="path-0-1-0">
-        <div class="title" data-od-id="path-0-1-0-0">
-          <h1 data-od-id="path-0-1-0-0-0">Dashboard autenticado</h1>
-          <p>Investiga, versiona, monitorea conectores, analiza señales, audita decisiones y controla consumo en una sola superficie con evidencia operativa visible.</p>
+    <section class="main">
+      <header class="topbar">
+        <div class="title">
+          <h1>Dashboard autenticado</h1>
+          <p>Investiga, versiona, monitorea conectores, analiza señales, audita decisiones y controla consumo en una sola superficie.</p>
         </div>
-        <div class="toolbar" data-od-id="path-0-1-0-1">
+        <div class="toolbar">
           <label class="search" aria-label="Buscar">
             <span>⌕</span>
-            <input type="search" placeholder="Buscar investigaciones, flujos, conectores…">
+            <input type="search" placeholder="Buscar investigaciones, playbooks, conectores…" />
           </label>
           <select class="select" aria-label="Espacio de trabajo">
             <option>Equipo de SOC</option>
@@ -1033,23 +769,18 @@
         </div>
       </header>
 
-      <div class="content" data-od-id="path-0-1-1">
-        <section class="view active" data-view-panel="overview" data-od-id="path-0-1-1-0">
-          <div class="view-grid" data-od-id="path-0-1-1-0-0">
+      <div class="content">
+        <section class="view active" data-view-panel="overview">
+          <div class="view-grid">
             <div class="hero-grid">
               <div class="panel">
                 <span class="chip">Visión general</span>
-                <h2 style="margin-top:14px" data-od-id="path-0-1-1-0-0-0-0-1">Lo que necesita el equipo está arriba, no escondido en otra pantalla.</h2>
-                <p>La vista de entrada prioriza investigaciones activas, estado de flujos y salud de conectores con suficiente densidad para operar sin ruido innecesario, y con suficiente contexto para confiar en lo que ve.</p>
+                <h2 style="margin-top:14px">Lo que necesita el equipo está arriba, no escondido en otra pantalla.</h2>
+                <p>La vista de entrada prioriza investigaciones activas, estado de playbooks y salud de conectores con suficiente densidad para operar sin ruido innecesario.</p>
                 <div class="hero-stats">
                   <div class="stat"><strong>Investigaciones activas</strong><span>Cola ordenada por prioridad, contexto y propietario.</span></div>
-                <div class="stat"><strong>Flujos en uso</strong><span>Versiones vivas con historial y transición visible.</span></div>
+                  <div class="stat"><strong>Playbooks en uso</strong><span>Versiones vivas con historial y transición visible.</span></div>
                   <div class="stat"><strong>Conectores sanos</strong><span>Fuentes operativas con frescura y latencia legibles.</span></div>
-                </div>
-                <div class="proof-strip">
-                  <div class="proof"><span>Origen</span><strong>Datos, versión y propietario se leen juntos en la misma vista.</strong></div>
-                  <div class="proof"><span>Control</span><strong>Acciones rápidas con impacto visible en el estado del espacio.</strong></div>
-                  <div class="proof"><span>Cadena</span><strong>De señal a decisión sin perder el contexto de trabajo.</strong></div>
                 </div>
               </div>
               <div class="status-card">
@@ -1064,34 +795,23 @@
                     <div class="track"><i style="width:67%"></i></div>
                   </div>
                   <div class="progress-row">
-                    <div class="label"><strong>Cadena de decisión</strong><span>Auditable</span></div>
+                    <div class="label"><strong>Decision chain</strong><span>Auditable</span></div>
                     <div class="track"><i style="width:76%"></i></div>
-                  </div>
-                </div>
-                <div class="sync-state" aria-label="Estado de actualización">
-                  <div class="sync-head">
-                    <strong><span class="sync-dot" aria-hidden="true"></span>Actualizando vista</strong>
-                    <small>hace 14 s</small>
-                  </div>
-                  <div class="sync-bars" aria-hidden="true">
-                    <span></span>
-                    <span></span>
-                    <span class="short"></span>
                   </div>
                 </div>
               </div>
             </div>
             <div class="grid-2">
               <div class="card">
-                <div class="card-head"><h3 data-od-id="path-0-1-1-0-0-1-0-0-0">Investigaciones recientes</h3><span class="chip emerald">SOC</span></div>
+                <div class="card-head"><h3>Investigaciones recientes</h3><span class="chip emerald">SOC</span></div>
                 <div class="list">
-                  <div class="row"><div><strong>Campaña de phishing</strong><span>Triaje · 14 entidades correlacionadas</span></div><small>Alta</small></div>
+                  <div class="row"><div><strong>Campaña de phishing</strong><span>Triaged · 14 entidades correlacionadas</span></div><small>Alta</small></div>
                   <div class="row"><div><strong>Exposición de credenciales</strong><span>Enriquecida · origen confirmado</span></div><small>Media</small></div>
                   <div class="row"><div><strong>Dominio sospechoso</strong><span>En espera · revisión por analista</span></div><small>Baja</small></div>
                 </div>
               </div>
               <div class="card">
-                <div class="card-head"><h3 data-od-id="path-0-1-1-0-0-1-1-0-0">Acciones rápidas</h3><span class="chip amber">Operación</span></div>
+                <div class="card-head"><h3>Acciones rápidas</h3><span class="chip amber">Operación</span></div>
                 <div class="list">
                   <div class="row"><div><strong>Crear playbook</strong><span>Nuevo flujo desde una plantilla versionada</span></div><small>+</small></div>
                   <div class="row"><div><strong>Sincronizar conectores</strong><span>Validar frescura y credenciales</span></div><small>↻</small></div>
@@ -1102,16 +822,16 @@
           </div>
         </section>
 
-        <section class="view" data-view-panel="playbooks" data-od-id="path-0-1-1-1">
-          <div class="view-grid" data-od-id="path-0-1-1-1-0">
+        <section class="view" data-view-panel="playbooks">
+          <div class="view-grid">
             <div class="panel">
-              <span class="chip">Flujos</span>
-              <h2 style="margin-top:14px" data-od-id="path-0-1-1-1-0-0-1">Gestiona flujos como código con una lectura visual clara.</h2>
-              <p>La edición presenta pasos, decisiones y versiones en un formato operativo. No intenta parecer un editor de texto ni un diagrama vacío; muestra la fuente, la revisión y la razón de cada cambio.</p>
+              <span class="chip">Playbooks</span>
+              <h2 style="margin-top:14px">Gestiona flujos como código con una lectura visual clara.</h2>
+              <p>La edición presenta pasos, decisiones y versiones en un formato operativo. No intenta parecer un editor de texto ni un diagrama vacío.</p>
             </div>
             <div class="playbook-grid">
               <div class="editor">
-                <div class="card-head"><h3 data-od-id="path-0-1-1-1-0-1-0-0-0">Flujo seleccionado</h3><span class="badge"><span class="dot"></span>Publicado</span></div>
+                <div class="card-head"><h3>Playbook seleccionado</h3><span class="badge"><span class="dot"></span>Publicado</span></div>
                 <div class="steps">
                   <div class="step"><div style="display:flex;gap:12px;align-items:center"><div class="num">01</div><div><strong>Recibir señal</strong><span>Captura y normalización</span></div></div><small>Entrada</small></div>
                   <div class="step"><div style="display:flex;gap:12px;align-items:center"><div class="num">02</div><div><strong>Enriquecer contexto</strong><span>Entidad, reputación, correlación</span></div></div><small>Regla</small></div>
@@ -1123,34 +843,32 @@
   score using confidence * criticality
   branch if score &gt; threshold
   record decision with version and actor
-  attach provenance.source + audit.comment
 }</div>
               </div>
               <div class="mini-side">
                 <div class="stat"><strong>Versiones</strong><span>Historial visible, diferenciando cambios de lógica y cambios de texto.</span></div>
                 <div class="stat"><strong>Revisión</strong><span>Aprobación explícita antes de activar un flujo para todo el equipo.</span></div>
-                <div class="stat"><strong>Procedencia</strong><span>Origen, actor y comentario viajan juntos para que la auditoría sea consultable.</span></div>
               </div>
             </div>
           </div>
         </section>
 
-        <section class="view" data-view-panel="connectors" data-od-id="path-0-1-1-2">
-          <div class="view-grid" data-od-id="path-0-1-1-2-0">
+        <section class="view" data-view-panel="connectors">
+          <div class="view-grid">
             <div class="panel">
               <span class="chip">Conectores</span>
-              <h2 style="margin-top:14px" data-od-id="path-0-1-1-2-0-0-1">Salud de fuentes y latencia con una estética limpia, no alarmista.</h2>
-              <p>Los conectores se organizan por función y muestran disponibilidad, última sincronización y estado sin saturar la vista con rojo innecesario. También dejan ver qué fuente está atrasada y por qué importa.</p>
+              <h2 style="margin-top:14px">Salud de fuentes y latencia con una estética limpia, no alarmista.</h2>
+              <p>Los conectores se organizan por función y muestran disponibilidad, última sincronización y estado sin saturar la vista con rojo innecesario.</p>
             </div>
             <div class="connector-grid">
-              <div class="connector"><span class="chip">Entrada</span><strong>Correo y tickets</strong><span>Fuentes operativas con sincronización estable y timestamp de última recepción.</span></div>
-              <div class="connector"><span class="chip emerald">Enriquecimiento</span><strong>Reputación y intel</strong><span>Contexto externo y listas internas con trazabilidad, frescura y propietario visibles.</span></div>
-              <div class="connector"><span class="chip">Salida</span><strong>SIEM y mensajería</strong><span>Entrega de resultados al flujo habitual del equipo con respuesta confirmable.</span></div>
-              <div class="connector"><span class="chip amber">Gobierno</span><strong>Credenciales y permisos</strong><span>Control de acceso y rotación con claridad operativa y próximos pasos visibles.</span></div>
+              <div class="connector"><span class="chip">Entrada</span><strong>Correo y tickets</strong><span>Fuentes operativas con sincronización estable.</span></div>
+              <div class="connector"><span class="chip emerald">Enriquecimiento</span><strong>Reputación y intel</strong><span>Contexto externo y listas internas con trazabilidad.</span></div>
+              <div class="connector"><span class="chip">Salida</span><strong>SIEM y mensajería</strong><span>Entrega de resultados al flujo habitual del equipo.</span></div>
+              <div class="connector"><span class="chip amber">Gobierno</span><strong>Credenciales y permisos</strong><span>Control de acceso y rotación con claridad operativa.</span></div>
             </div>
             <div class="grid-2">
               <div class="card">
-                <div class="card-head"><h3 data-od-id="path-0-1-1-2-0-2-0-0-0">Sincronizaciones recientes</h3><span class="badge"><span class="dot"></span>Correcto</span></div>
+                <div class="card-head"><h3>Sincronizaciones recientes</h3><span class="badge"><span class="dot"></span>Correcto</span></div>
                 <div class="list">
                   <div class="row"><div><strong>Email Gateway</strong><span>Última sincronización hace 4 min</span></div><small>99%</small></div>
                   <div class="row"><div><strong>Intel Feed</strong><span>Última sincronización hace 7 min</span></div><small>96%</small></div>
@@ -1158,7 +876,7 @@
                 </div>
               </div>
               <div class="card">
-                <div class="card-head"><h3 data-od-id="path-0-1-1-2-0-2-1-0-0">Estado operativo</h3><span class="chip emerald">Salud</span></div>
+                <div class="card-head"><h3>Estado operativo</h3><span class="chip emerald">Salud</span></div>
                 <div class="list">
                   <div class="row"><div><strong>Latencia media</strong><span>Legible en el tiempo de operación, no oculta</span></div><small>36s</small></div>
                   <div class="row"><div><strong>Errores de autenticación</strong><span>Visibles y con guía de remediación</span></div><small>0</small></div>
@@ -1169,12 +887,12 @@
           </div>
         </section>
 
-        <section class="view" data-view-panel="scoring" data-od-id="path-0-1-1-3">
-          <div class="view-grid" data-od-id="path-0-1-1-3-0">
+        <section class="view" data-view-panel="scoring">
+          <div class="view-grid">
             <div class="panel">
               <span class="chip">Puntuación</span>
-              <h2 style="margin-top:14px" data-od-id="path-0-1-1-3-0-0-1">Mide relación, contexto y prioridad sin convertir la analítica en ruido.</h2>
-              <p>La puntuación se lee con barras limpias y bloques de contexto que explican por qué una investigación sube o se estabiliza. La prioridad se entiende por evidencia, no por color.</p>
+              <h2 style="margin-top:14px">Mide relación, contexto y prioridad sin convertir la analítica en ruido.</h2>
+              <p>La puntuación se lee con barras limpias y bloques de contexto que explican por qué una investigación sube o se estabiliza.</p>
             </div>
             <div class="signal-grid">
               <div class="chart">
@@ -1185,7 +903,7 @@
                 </div>
               </div>
               <div class="card">
-                <div class="card-head"><h3 data-od-id="path-0-1-1-3-0-1-1-0-0">Interpretación</h3><span class="chip amber">Analítica</span></div>
+                <div class="card-head"><h3>Interpretación</h3><span class="chip amber">Analítica</span></div>
                 <div class="list">
                   <div class="row"><div><strong>Señales coincidentes</strong><span>Fuentes distintas coinciden en el mismo actor o evento</span></div><small>8</small></div>
                   <div class="row"><div><strong>Vacíos de confianza</strong><span>Datos insuficientes para cerrar la investigación</span></div><small>2</small></div>
@@ -1196,34 +914,34 @@
           </div>
         </section>
 
-        <section class="view" data-view-panel="audit" data-od-id="path-0-1-1-4">
-          <div class="view-grid" data-od-id="path-0-1-1-4-0">
+        <section class="view" data-view-panel="audit">
+          <div class="view-grid">
             <div class="panel">
               <span class="chip">Auditoría</span>
-              <h2 style="margin-top:14px" data-od-id="path-0-1-1-4-0-0-1">Explora la cadena de decisiones con filtros simples y trazas legibles.</h2>
-              <p>La historia de cada acción es parte del producto. Se pueden filtrar actores, cambios, aprobaciones y salidas sin alterar la vista general, y cada fila mantiene una referencia clara de origen.</p>
+              <h2 style="margin-top:14px">Explora la cadena de decisiones con filtros simples y trazas legibles.</h2>
+              <p>La historia de cada acción es parte del producto. Se pueden filtrar actores, cambios, aprobaciones y salidas sin alterar la vista general.</p>
             </div>
             <div class="audit">
               <div class="audit-filters" role="toolbar" aria-label="Filtros de auditoría">
-                <button type="button" aria-pressed="true" data-od-id="path-0-1-1-4-0-1-0-0">Todo</button>
-                <button type="button" aria-pressed="false" data-od-id="path-0-1-1-4-0-1-0-1">Cambios</button>
-                <button type="button" aria-pressed="false" data-od-id="path-0-1-1-4-0-1-0-2">Aprobaciones</button>
-                <button type="button" aria-pressed="false" data-od-id="path-0-1-1-4-0-1-0-3">Exportaciones</button>
+                <button type="button" aria-pressed="true">Todo</button>
+                <button type="button" aria-pressed="false">Cambios</button>
+                <button type="button" aria-pressed="false">Aprobaciones</button>
+                <button type="button" aria-pressed="false">Exportaciones</button>
               </div>
               <div class="log">
                 <div class="item">
                   <time>09:12</time>
-                  <div><strong>Se publicó la versión 3.4 del playbook</strong><span>Autor: equipo de threat intelligence · revisión aprobada · diff semántico disponible</span></div>
+                  <div><strong>Se publicó la versión 3.4 del playbook</strong><span>Autor: equipo de threat intelligence · revisión aprobada</span></div>
                   <div class="state">aprobado</div>
                 </div>
                 <div class="item">
                   <time>08:47</time>
-                  <div><strong>Se exportó evidencia para el líder de seguridad</strong><span>Exportación con trazabilidad, comentarios incluidos y referencia al caso original</span></div>
+                  <div><strong>Se exportó evidencia para el líder de seguridad</strong><span>Exportación con trazabilidad y comentarios incluidos</span></div>
                   <div class="state">exportado</div>
                 </div>
                 <div class="item">
                   <time>08:21</time>
-                  <div><strong>Se ajustó el umbral de puntuación</strong><span>Cambio menor con impacto controlado en priorización y responsable identificado</span></div>
+                  <div><strong>Se ajustó el umbral de puntuación</strong><span>Cambio menor con impacto controlado en priorización</span></div>
                   <div class="state">cambio</div>
                 </div>
               </div>
@@ -1231,12 +949,12 @@
           </div>
         </section>
 
-        <section class="view" data-view-panel="billing" data-od-id="path-0-1-1-5">
-          <div class="view-grid" data-od-id="path-0-1-1-5-0">
+        <section class="view" data-view-panel="billing">
+          <div class="view-grid">
             <div class="panel">
               <span class="chip">Uso y facturación</span>
-              <h2 style="margin-top:14px" data-od-id="path-0-1-1-5-0-0-1">Límites, consumo y plan sin esconder la información detrás de un menú.</h2>
-              <p>La vista de consumo permite revisar límites y coste operativo de forma clara, para que el equipo entienda dónde está el margen real y cuándo conviene escalar sin sorpresa.</p>
+              <h2 style="margin-top:14px">Límites, consumo y plan sin esconder la información detrás de un menú.</h2>
+              <p>La vista de consumo permite revisar límites y coste operativo de forma clara, para que el equipo entienda dónde está el margen real.</p>
             </div>
             <div class="billing">
               <div class="quota">
@@ -1255,9 +973,9 @@
               </div>
               <div class="plan">
                 <span class="pill">Plan premium</span>
-                <h3 style="margin:0;font-size:1.35rem;letter-spacing:-.04em" data-od-id="path-0-1-1-5-0-1-1-1">Diseñado para equipos que necesitan escala, control y trazabilidad.</h3>
-                <p>Versionado, auditoría, conectores amplios y gobierno operativo para entornos enterprise con previsibilidad de uso.</p>
-                <a class="btn" href="landing.html#comparativa" data-od-id="path-0-1-1-5-0-1-1-3">Revisar planes</a>
+                <h3 style="margin:0;font-size:1.35rem;letter-spacing:-.04em">Diseñado para equipos que necesitan escala, control y trazabilidad.</h3>
+                <p>Versionado, auditoría, conectores amplios y gobierno operativo para entornos enterprise.</p>
+                <a class="btn" href="landing.html#comparativa">Revisar planes</a>
               </div>
             </div>
           </div>
@@ -1266,14 +984,14 @@
     </section>
   </div>
 
-  <nav class="footer-nav" aria-label="Navegación inferior" data-od-id="path-1">
-    <div class="tabs" role="tablist" data-od-id="path-1-0">
-      <button type="button" role="tab" aria-selected="true" data-mobile-view="overview" data-od-id="path-1-0-0"><span>⌂</span>General</button>
-      <button type="button" role="tab" aria-selected="false" data-mobile-view="playbooks" data-od-id="path-1-0-1"><span>✦</span>Flujos</button>
-      <button type="button" role="tab" aria-selected="false" data-mobile-view="connectors" data-od-id="path-1-0-2"><span>◌</span>Conectores</button>
-      <button type="button" role="tab" aria-selected="false" data-mobile-view="scoring" data-od-id="path-1-0-3"><span>↗</span>Puntuación</button>
-      <button type="button" role="tab" aria-selected="false" data-mobile-view="audit" data-od-id="path-1-0-4"><span>⌁</span>Auditoría</button>
-      <button type="button" role="tab" aria-selected="false" data-mobile-view="billing" data-od-id="path-1-0-5"><span>¤</span>Uso</button>
+  <nav class="footer-nav" aria-label="Navegación inferior">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-mobile-view="overview"><span>⌂</span>General</button>
+      <button type="button" role="tab" aria-selected="false" data-mobile-view="playbooks"><span>✦</span>Playbooks</button>
+      <button type="button" role="tab" aria-selected="false" data-mobile-view="connectors"><span>◌</span>Conectores</button>
+      <button type="button" role="tab" aria-selected="false" data-mobile-view="scoring"><span>↗</span>Puntuación</button>
+      <button type="button" role="tab" aria-selected="false" data-mobile-view="audit"><span>⌁</span>Auditoría</button>
+      <button type="button" role="tab" aria-selected="false" data-mobile-view="billing"><span>¤</span>Uso</button>
     </div>
   </nav>
 
@@ -1309,201 +1027,5 @@
       setView(hash);
     })();
   </script>
-
-
-<script data-od-snapshot-bridge>(function(){
-  var SNAPSHOT_STYLE_PROPS = [
-    'display','position','box-sizing','width','height','min-width','max-width','min-height','max-height',
-    'margin','margin-top','margin-right','margin-bottom','margin-left',
-    'padding','padding-top','padding-right','padding-bottom','padding-left',
-    'border','border-top','border-right','border-bottom','border-left','border-radius',
-    'font','font-family','font-size','font-weight','font-style','line-height','letter-spacing',
-    'color','background-color','opacity','transform','transform-origin','overflow','overflow-x','overflow-y',
-    'white-space','text-align','vertical-align','object-fit','object-position',
-    'flex','flex-direction','flex-wrap','flex-grow','flex-shrink','flex-basis',
-    'grid','grid-template-columns','grid-template-rows','grid-column','grid-row',
-    'gap','row-gap','column-gap','align-items','align-content','align-self',
-    'justify-items','justify-content','justify-self','inset','top','right','bottom','left',
-    'z-index','box-shadow','text-shadow'
-  ];
-  function copyComputedStyle(source, target){
-    if (!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
-    var computed = window.getComputedStyle(source);
-    var style = target.getAttribute('style') || '';
-    for (var i = 0; i < SNAPSHOT_STYLE_PROPS.length; i++){
-      var prop = SNAPSHOT_STYLE_PROPS[i];
-      var value = computed.getPropertyValue(prop);
-      if (value) style += prop + ':' + value + ';';
-    }
-    target.setAttribute('style', style);
-  }
-  function syncElementState(source, target){
-    var tag = source.tagName ? source.tagName.toLowerCase() : '';
-    if (tag === 'img' && source.currentSrc) target.setAttribute('src', source.currentSrc);
-    if (tag === 'input' || tag === 'textarea') target.setAttribute('value', source.value || '');
-    if (tag === 'canvas') {
-      try {
-        var img = document.createElement('img');
-        img.setAttribute('src', source.toDataURL('image/png'));
-        img.setAttribute('style', target.getAttribute('style') || '');
-        target.parentNode && target.parentNode.replaceChild(img, target);
-      } catch (_) {}
-    }
-  }
-  function inlineSnapshotStyles(originalRoot, cloneRoot){
-    copyComputedStyle(originalRoot, cloneRoot);
-    syncElementState(originalRoot, cloneRoot);
-    var originals = originalRoot.querySelectorAll('*');
-    var clones = cloneRoot.querySelectorAll('*');
-    var count = Math.min(originals.length, clones.length, 3500);
-    for (var i = 0; i < count; i++){
-      copyComputedStyle(originals[i], clones[i]);
-      syncElementState(originals[i], clones[i]);
-    }
-    var scripts = cloneRoot.querySelectorAll('script');
-    for (var s = scripts.length - 1; s >= 0; s--) scripts[s].remove();
-    var links = cloneRoot.querySelectorAll('link[rel~="stylesheet"], link[rel~="preload"], link[rel~="preconnect"]');
-    for (var l = links.length - 1; l >= 0; l--) links[l].remove();
-    var styles = cloneRoot.querySelectorAll('style');
-    for (var st = 0; st < styles.length; st++) {
-      styles[st].textContent = (styles[st].textContent || '')
-        .replace(/@import[^;]+;/gi, '')
-        .replace(/@font-face\s*\{[^}]*\}/gi, '');
-    }
-  }
-  function pruneHiddenSnapshotNodes(originalRoot, cloneRoot){
-    var originals = originalRoot.querySelectorAll('*');
-    var clones = cloneRoot.querySelectorAll('*');
-    var count = Math.min(originals.length, clones.length);
-    var removals = [];
-    for (var i = 0; i < count; i++){
-      var original = originals[i];
-      var clone = clones[i];
-      if (!original || !clone || !clone.parentNode) continue;
-      var computed = window.getComputedStyle(original);
-      if (computed && (computed.display === 'none' || computed.visibility === 'hidden')) {
-        removals.push(clone);
-      }
-    }
-    for (var r = removals.length - 1; r >= 0; r--){
-      if (removals[r].parentNode) removals[r].parentNode.removeChild(removals[r]);
-    }
-  }
-  function waitForImages(){
-    var imgs = Array.prototype.slice.call(document.images || []);
-    return Promise.all(imgs.map(function(img){
-      if (img.complete) return Promise.resolve();
-      return new Promise(function(resolve){
-        img.addEventListener('load', resolve, { once: true });
-        img.addEventListener('error', resolve, { once: true });
-      });
-    }));
-  }
-  function scrollOffset(){
-    var doc = document.documentElement;
-    var body = document.body;
-    return {
-      x: Math.max(window.scrollX || 0, doc ? doc.scrollLeft || 0 : 0, body ? body.scrollLeft || 0 : 0),
-      y: Math.max(window.scrollY || 0, doc ? doc.scrollTop || 0 : 0, body ? body.scrollTop || 0 : 0)
-    };
-  }
-  function escapeAttribute(value){
-    return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-  }
-  function snapshotBackgroundColor(){
-    try {
-      var probe = window.getComputedStyle(document.body || document.documentElement);
-      var bg = probe && probe.backgroundColor || '';
-      if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') return '#ffffff';
-      return bg;
-    } catch (_) { return '#ffffff'; }
-  }
-  // After painting, sample the canvas: a uniform (single-color) bitmap means
-  // the foreignObject rasterizer painted nothing — Chromium frequently refuses
-  // to paint <foreignObject> HTML loaded via <img>. Treating that as an honest
-  // 'empty-render' error (instead of shipping the background-only frame) lets
-  // the host fall back / surface a real failure rather than a silent black PNG.
-  function canvasLooksBlank(ctx, cw, ch){
-    try {
-      var data = ctx.getImageData(0, 0, cw, ch).data;
-      var step = Math.max(4, Math.floor((cw * ch) / 4096)) * 4;
-      var first = null, samples = 0;
-      for (var i = 0; i + 3 < data.length; i += step){
-        samples++;
-        if (!first){ first = [data[i], data[i+1], data[i+2], data[i+3]]; continue; }
-        if (Math.abs(data[i]-first[0]) > 6 || Math.abs(data[i+1]-first[1]) > 6 ||
-            Math.abs(data[i+2]-first[2]) > 6 || Math.abs(data[i+3]-first[3]) > 6) return false;
-      }
-      return samples > 8;
-    } catch (_) { return false; }
-  }
-  function renderSnapshot(id){
-    var w = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
-    var h = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
-    var dpr = window.devicePixelRatio || 1;
-    var bgColor = snapshotBackgroundColor();
-    var docW = Math.max(w, document.documentElement.scrollWidth || 0, document.body ? document.body.scrollWidth : 0);
-    var docH = Math.max(h, document.documentElement.scrollHeight || 0, document.body ? document.body.scrollHeight : 0);
-    var clone = document.documentElement.cloneNode(true);
-    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-    inlineSnapshotStyles(document.documentElement, clone);
-    pruneHiddenSnapshotNodes(document.documentElement, clone);
-    var scroll = scrollOffset();
-    var cloneBody = clone.querySelector('body');
-    var rootStyle = clone.getAttribute('style') || '';
-    var bodyStyle = cloneBody ? cloneBody.getAttribute('style') || '' : '';
-    var bodyContent = cloneBody ? cloneBody.innerHTML : clone.innerHTML;
-    var wrapperStyle = rootStyle + bodyStyle +
-      'margin:0;position:relative;left:' + (-scroll.x) + 'px;top:' + (-scroll.y) + 'px;' +
-      'width:' + docW + 'px;height:' + docH + 'px;overflow:visible;';
-    var html = '<div xmlns="http://www.w3.org/1999/xhtml" style="' + escapeAttribute(wrapperStyle) + '">' + bodyContent + '</div>';
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
-      '<foreignObject x="0" y="0" width="' + docW + '" height="' + docH + '">' +
-      html +
-      '</foreignObject></svg>';
-    var img = new Image();
-    img.onload = function(){
-      try {
-        var canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.floor(w * dpr));
-        canvas.height = Math.max(1, Math.floor(h * dpr));
-        var ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('no 2d context');
-        ctx.scale(dpr, dpr);
-        // Opaque base so a transparent (un-painted) raster never flattens to
-        // pure black in clipboards / PNG viewers.
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
-        if (canvasLooksBlank(ctx, canvas.width, canvas.height)) {
-          window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: 'empty-render' }, '*');
-          return;
-        }
-        window.parent.postMessage({ type: 'od:snapshot:result', id: id, dataUrl: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }, '*');
-      } catch (err) {
-        window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: String(err && err.message || err) }, '*');
-      }
-    };
-    function encodedSvgDataUrl(){
-      var encoded = encodeURIComponent(svg);
-      return 'data:image/svg+xml;charset=utf-8,' + encoded;
-    }
-    img.onerror = function(){
-      window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: 'snapshot image failed' }, '*');
-    };
-    img.src = encodedSvgDataUrl();
-  }
-  window.addEventListener('message', function(ev){
-    var data = ev && ev.data;
-    if (!data || data.type !== 'od:snapshot' || !data.id) return;
-    waitForImages().then(function(){ renderSnapshot(String(data.id)); });
-  });
-})();</script><script data-od-srcdoc-transport-activation>(function(){
-  window.addEventListener('message', function(ev){
-    var data = ev && ev.data;
-    if (!data || data.type !== 'od:srcdoc-transport-activate' || typeof data.html !== 'string') return;
-    document.open();
-    document.write(data.html);
-    document.close();
-  });
-})();</script></body></html>
+</body>
+</html>

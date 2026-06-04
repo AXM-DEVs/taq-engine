@@ -1,64 +1,8 @@
 <!doctype html>
-<html lang="es-ES"><head><script data-od-sandbox-shim>(function(){
-  function makeStore(){
-    var data = {};
-    var api = {
-      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
-      setItem: function(k, v){ data[k] = String(v); },
-      removeItem: function(k){ delete data[k]; },
-      clear: function(){ data = {}; },
-      key: function(i){ return Object.keys(data)[i] || null; }
-    };
-    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
-    return api;
-  }
-  function tryShim(name){
-    var works = false;
-    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
-    catch (_) { works = false; }
-    if (works) return;
-    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
-    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
-  }
-  tryShim('localStorage');
-  tryShim('sessionStorage');
-  document.addEventListener('click', (e) => {
-    if (!e.target || !(e.target instanceof Element)) return;
-    var link = e.target.closest('a[href]');
-    if (!link) return;
-    var href = link.getAttribute('href');
-    if (href === null) return;
-    var isAnchor = href.startsWith('#') || href === '';
-    if (isAnchor) {
-      e.preventDefault();
-      if (href === '' || href === '#') {
-        window.scrollTo({ top: 0 });
-        history.replaceState(null, '', ' ');
-      } else {
-        var targetId = href.slice(1);
-        var target = targetId ? document.getElementById(targetId) : null;
-        if (target) {
-          target.scrollIntoView();
-          location.hash === href && history.replaceState(null, '', ' ');
-          location.hash = href;
-        }
-      }
-    } else if (link.getAttribute('target') === '_blank') {
-      e.preventDefault();
-      let safe = false;
-      try {
-        var url = new URL(href, location.href);
-        safe =
-          url.protocol === 'http:' ||
-          url.protocol === 'https:' ||
-          url.protocol === 'mailto:';
-      } catch (_) {}
-      safe && window.open(href, '_blank', 'noopener,noreferrer');
-    }
-  });
-})();</script>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="es-ES">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TaQ Engine · Landing</title>
   <style>
     :root{
@@ -78,8 +22,6 @@
       --shadow-soft:0 16px 40px rgba(14, 33, 63, .08);
       --radius:28px;
       --radius-sm:18px;
-      --ease-smooth:cubic-bezier(.22, 1, .36, 1);
-      --ease-soft:cubic-bezier(.23, 1, .32, 1);
       --font-display:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     }
@@ -254,26 +196,9 @@
       border:1px solid var(--line);
       border-radius:20px;
       box-shadow:var(--shadow-soft);
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .mini strong{display:block; font-size:.95rem; margin-bottom:6px}
     .mini span{display:block; color:var(--muted); font-size:.84rem; line-height:1.45}
-    .evidence-band{
-      margin-top:14px;
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-      gap:12px;
-    }
-    .evidence{
-      background:rgba(255,255,255,.88);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px 15px;
-      box-shadow:var(--shadow-soft);
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
-    }
-    .evidence strong{display:block; font-size:.86rem; letter-spacing:-.02em}
-    .evidence span{display:block; margin-top:5px; color:var(--muted); font-size:.78rem; line-height:1.45}
     .panel{
       border-radius:var(--radius);
       border:1px solid rgba(185,201,219,.9);
@@ -281,7 +206,6 @@
       box-shadow:var(--shadow);
       overflow:hidden;
       position:relative;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .panel::before{
       content:"";
@@ -314,65 +238,6 @@
       position:relative;
       z-index:1;
     }
-    .preview-state{
-      margin-top:14px;
-      border-radius:22px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.88);
-      padding:14px 15px 15px;
-      display:grid;
-      gap:10px;
-      box-shadow:var(--shadow-soft);
-    }
-    .preview-state-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      font-size:.82rem;
-    }
-    .preview-state-head strong{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      font-weight:600;
-      letter-spacing:-.02em;
-      color:var(--text);
-    }
-    .preview-state-head small{
-      color:var(--muted);
-      white-space:nowrap;
-    }
-    .live-dot{
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      background:var(--emerald);
-      box-shadow:0 0 0 6px rgba(23,129,109,.11);
-      flex:none;
-      animation:breathe 2.8s var(--ease-smooth) infinite;
-    }
-    .loading-skeleton{
-      display:grid;
-      gap:8px;
-    }
-    .loading-skeleton span{
-      position:relative;
-      overflow:hidden;
-      height:10px;
-      border-radius:999px;
-      background:linear-gradient(90deg, rgba(16,62,118,.08), rgba(16,62,118,.04));
-    }
-    .loading-skeleton span.short{width:68%}
-    .loading-skeleton span.wide{width:92%}
-    .loading-skeleton span::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      transform:translateX(-120%);
-      background:linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
-      animation:shimmer 2.4s linear infinite;
-    }
     .playbook-slab{
       background:rgba(255,255,255,.82);
       border:1px solid var(--line);
@@ -382,7 +247,6 @@
       min-height:420px;
       display:grid;
       gap:16px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .slab-top{
       display:flex;
@@ -421,7 +285,7 @@
       font:inherit;
       font-size:.85rem;
       cursor:pointer;
-      transition:background .24s var(--ease-smooth), color .24s var(--ease-smooth), border-color .24s var(--ease-smooth), transform .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth);
+      transition:background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
     }
     .playbook-tabs button[aria-pressed="true"]{
       background:rgba(16,62,118,.08);
@@ -447,7 +311,6 @@
       align-items:center;
       padding:12px 0;
       position:relative;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .flow .row + .row{border-top:1px solid rgba(185,201,219,.55)}
     .dot{
@@ -485,7 +348,6 @@
       padding:14px;
       display:grid;
       gap:10px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .metric .kicker{font-size:.76rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
     .metric .value{font-size:1.35rem; font-weight:700; letter-spacing:-.03em}
@@ -505,11 +367,6 @@
     }
     .bar.amber i{width:35%; background:linear-gradient(90deg, var(--amber), #ddb14d)}
     @keyframes grow{from{transform:scaleX(.22); transform-origin:left center} to{transform:scaleX(1)}}
-    @keyframes shimmer{100%{transform:translateX(120%)}}
-    @keyframes breathe{
-      0%,100%{transform:scale(.92); box-shadow:0 0 0 6px rgba(23,129,109,.10)}
-      50%{transform:scale(1); box-shadow:0 0 0 8px rgba(23,129,109,.06)}
-    }
     .three-up{
       display:grid;
       grid-template-columns:repeat(3, minmax(0, 1fr));
@@ -522,7 +379,6 @@
       padding:22px;
       box-shadow:var(--shadow-soft);
       min-height:100%;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .card h2,.wide h2,.compare h2,.cta h2{font-family:var(--font-display); letter-spacing:-.04em}
     .card h2{font-size:clamp(1.7rem, 2.2vw, 2.45rem); line-height:1; max-width:12ch}
@@ -536,7 +392,6 @@
       border-radius:var(--radius);
       padding:26px;
       box-shadow:var(--shadow-soft);
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .wide h2{
       font-size:clamp(2rem, 2.9vw, 3.3rem);
@@ -560,7 +415,6 @@
       padding:16px;
       display:grid;
       gap:10px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .module .title{
       display:flex;
@@ -571,22 +425,6 @@
     .module .title strong{font-size:.96rem}
     .module .title span{font-size:.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:.12em}
     .module p{margin:0; color:var(--muted); line-height:1.6}
-    .module .meta-list{
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-      gap:8px;
-      margin-top:6px;
-    }
-    .module .meta-list span{
-      display:block;
-      padding:8px 10px;
-      border-radius:14px;
-      background:var(--surface-2);
-      border:1px solid var(--line);
-      color:var(--muted);
-      font-size:.76rem;
-      line-height:1.35;
-    }
     .story{
       display:grid;
       grid-template-columns:.92fr 1.08fr;
@@ -607,7 +445,7 @@
       box-shadow:var(--shadow-soft);
       opacity:.72;
       transform:translateY(8px);
-      transition:opacity .3s var(--ease-smooth), transform .3s var(--ease-smooth), border-color .3s var(--ease-smooth), background .3s var(--ease-smooth), box-shadow .3s var(--ease-smooth);
+      transition:opacity .3s ease, transform .3s ease, border-color .3s ease, background .3s ease;
     }
     .story-step.is-visible{
       opacity:1;
@@ -659,12 +497,6 @@
       border:1px solid var(--line);
       border-radius:20px;
       background:#fff;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
-    }
-    .event:hover{
-      transform:translateY(-2px);
-      border-color:rgba(16,62,118,.16);
-      box-shadow:0 18px 36px rgba(14, 33, 63, .08);
     }
     .pulse{
       width:18px;
@@ -703,7 +535,6 @@
       justify-content:space-between;
       gap:14px;
       align-items:center;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .layer strong{display:block}
     .layer span{color:var(--muted); font-size:.84rem}
@@ -728,7 +559,6 @@
       display:grid;
       gap:8px;
       min-height:150px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .ecosystem .item strong{font-size:.95rem}
     .ecosystem .item span{color:var(--muted); font-size:.84rem; line-height:1.5}
@@ -932,7 +762,6 @@
       align-items:end;
       overflow:hidden;
       position:relative;
-      transition:transform .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .cta-box::before{
       content:"";
@@ -992,7 +821,6 @@
       border-radius:24px;
       padding:18px;
       box-shadow:var(--shadow-soft);
-      transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
     }
     .positioning .tile strong{display:block; margin-bottom:8px}
     .positioning .tile p{margin:0; color:var(--muted); line-height:1.65}
@@ -1009,7 +837,6 @@
       min-height:136px;
       display:grid;
       gap:8px;
-      transition:transform .24s var(--ease-smooth), border-color .24s var(--ease-smooth), box-shadow .24s var(--ease-smooth), background .24s var(--ease-smooth);
     }
     .connector-grid .connector strong{font-size:.95rem}
     .connector-grid .connector span{color:var(--muted); font-size:.84rem; line-height:1.5}
@@ -1029,36 +856,6 @@
     }
     .pill.emerald{background:rgba(23,129,109,.1); color:var(--emerald)}
     .pill.amber{background:rgba(200,138,23,.12); color:var(--amber)}
-    .mini:hover,
-    .evidence:hover,
-    .panel:hover,
-    .playbook-slab:hover,
-    .flow .row:hover,
-    .signal .metric:hover,
-    .card:hover,
-    .wide:hover,
-    .module:hover,
-    .story-step:hover,
-    .event:hover,
-    .layer:hover,
-    .ecosystem .item:hover,
-    .connector-grid .connector:hover,
-    .positioning .tile:hover,
-    .cta-box:hover{
-      transform:translateY(-3px);
-      border-color:rgba(16,62,118,.16);
-      box-shadow:0 22px 44px rgba(14, 33, 63, .09);
-    }
-    .flow .row:hover,
-    .signal .metric:hover,
-    .module:hover,
-    .card:hover,
-    .wide:hover,
-    .layer:hover,
-    .connector-grid .connector:hover,
-    .positioning .tile:hover{
-      background:#fff;
-    }
     @media (max-width: 1080px){
       .hero-grid,.playbook-grid,.matrix,.story,.architecture,.scoreboard,.docs,.responsive,.cta-box,.positioning{grid-template-columns:1fr}
       .connector-grid,.govern,.ecosystem,.three-up,.hero-metrics{grid-template-columns:repeat(2, minmax(0, 1fr))}
@@ -1081,172 +878,72 @@
       *,*::before,*::after{animation:none!important; transition:none!important}
     }
   </style>
-<style data-od-tweaks-bridge-style>
-[data-od-tweaks-hidden] .tw-panel {
-  transform: translateX(calc(100% + 32px)) !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-.tw-restore { display: none !important; }
-</style><script data-od-tweaks-bridge>(function(){
-  // Synchronously hide BEFORE the artifact body parses so the panel never
-  // flashes on initial paint. The host removes the attribute via postMessage
-  // once it knows the desired state.
-  document.documentElement.setAttribute('data-od-tweaks-hidden', '');
-
-  var suppressEcho = false;
-  var observer = null;
-
-  function panelEl(){ return document.querySelector('.tw-panel'); }
-
-  function applyClassesToPanel(visible){
-    var panel = panelEl();
-    if (panel) panel.classList.toggle('tw-hidden', !visible);
-  }
-
-  function setPanelVisible(visible){
-    suppressEcho = true;
-    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !visible);
-    applyClassesToPanel(visible);
-    // Clear flag after the MutationObserver has had a chance to fire for this
-    // change so we don't echo our own host-driven toggles back to the host.
-    Promise.resolve().then(function(){ suppressEcho = false; });
-  }
-
-  function postState(){
-    var panel = panelEl();
-    if (!panel) return;
-    try {
-      parent.postMessage({
-        type: 'od:tweaks-panel-state',
-        visible: !panel.classList.contains('tw-hidden'),
-      }, '*');
-    } catch (e) {}
-  }
-
-  function postAvailability(){
-    try {
-      parent.postMessage({
-        type: 'od:tweaks-available',
-        available: !!panelEl(),
-      }, '*');
-    } catch (e) {}
-  }
-
-  function attachObserver(){
-    var panel = panelEl();
-    if (!panel || observer) return;
-    observer = new MutationObserver(function(){
-      if (suppressEcho) return;
-      postState();
-    });
-    observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
-  }
-
-  function onReady(){
-    // Capture the panel authored visibility BEFORE we apply the host hidden
-    // attribute. The bridge sets data-od-tweaks-hidden synchronously in head
-    // (before the body parses), so on entry to onReady the attribute is
-    // always present even though the artifact may have authored the panel
-    // as default-visible. Reading the panel class first is the only place
-    // we can still observe the author intent. Then drive the attribute,
-    // classes, and posted state from that captured value so a default
-    // visible tw-panel reports visible:true and the toolbar toggle starts
-    // ON. Issue surfaced in PR #1643 review.
-    var panel = panelEl();
-    var initialVisible = !!panel && !panel.classList.contains('tw-hidden');
-    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !initialVisible);
-    applyClassesToPanel(initialVisible);
-    attachObserver();
-    postAvailability();
-    // Post the captured initial visibility so the toolbar toggle reflects
-    // the default state on mount. Without this the toggle reads OFF while
-    // a default-visible tw-panel artifact clearly shows its panel and the
-    // user would have to click toggle-on then toggle-off to actually hide.
-    postState();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', onReady);
-  } else {
-    onReady();
-  }
-
-  window.addEventListener('message', function(ev){
-    if (!ev.data || ev.data.type !== 'od:tweaks-panel-visible') return;
-    setPanelVisible(!!ev.data.visible);
-  });
-})();</script></head>
+</head>
 <body>
-  <header class="topbar" data-od-id="path-0">
-    <div class="wrap" data-od-id="path-0-0">
-      <a class="brand" href="#hero" data-od-id="path-0-0-0">
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="#hero">
         <div class="mark" aria-hidden="true"></div>
         <div>
           <strong>TaQ Engine</strong>
           <span>Inteligencia de amenazas, definida como código</span>
         </div>
       </a>
-      <nav class="nav" aria-label="Navegación de landing" data-od-id="path-0-0-1">
-        <a href="#playbooks" data-od-id="path-0-0-1-0">Flujos</a>
-        <a href="#arquitectura" data-od-id="path-0-0-1-1">Arquitectura</a>
-        <a href="#seguridad" data-od-id="path-0-0-1-2">Seguridad</a>
-        <a href="#docs" data-od-id="path-0-0-1-3">Documentación</a>
-        <a class="cta" href="#cta" data-od-id="path-0-0-1-4">Solicitar acceso</a>
+      <nav class="nav" aria-label="Navegación de landing">
+        <a href="#playbooks">Playbooks</a>
+        <a href="#arquitectura">Arquitectura</a>
+        <a href="#seguridad">Seguridad</a>
+        <a href="#docs">Documentación</a>
+        <a class="cta" href="#cta">Solicitar acceso</a>
       </nav>
     </div>
   </header>
 
-  <main data-od-id="path-1">
-    <section class="section hero" id="hero" data-od-id="path-1-0">
-      <div class="wrap hero-grid" data-od-id="path-1-0-0">
+  <main>
+    <section class="section hero" id="hero">
+      <div class="wrap hero-grid">
         <div>
           <span class="eyebrow"><b>Plataforma</b> programable para equipos de SOC, threat intelligence y respuesta</span>
-          <h1 data-od-id="path-1-0-0-0-1">Threat Intelligence. Defined as Code.</h1>
+          <h1>Threat Intelligence. Defined as Code.</h1>
           <p class="lead">
             TaQ Engine transforma la inteligencia de amenazas en un motor de ejecución: defines flujos, los versionas, los automatizas
-            y los auditas con una interfaz sobria que deja ver la evidencia, no la exagera.
+            y los auditas sin caer en clichés de ciberseguridad ni en interfaces ruidosas.
           </p>
           <div class="hero-actions">
-            <a class="btn primary" href="#playbooks" data-od-id="path-1-0-0-0-3-0">Explorar playbooks</a>
-            <a class="btn secondary" href="#comparativa" data-od-id="path-1-0-0-0-3-1">Ver comparación</a>
+            <a class="btn primary" href="#playbooks">Explorar playbooks</a>
+            <a class="btn secondary" href="#comparativa">Ver comparación</a>
           </div>
           <div class="hero-metrics">
             <div class="mini"><strong>Confianza empresarial</strong><span>Jerarquía limpia, lenguaje preciso y una dirección visual sobria.</span></div>
             <div class="mini"><strong>Operación legible</strong><span>Investigaciones, conectores y scoring en una capa explicable.</span></div>
             <div class="mini"><strong>Escala para equipos</strong><span>Diseñado para analistas individuales y líderes de seguridad por igual.</span></div>
           </div>
-          <div class="evidence-band" aria-label="Pruebas operativas">
-            <div class="evidence"><strong>YAML versionado</strong><span>Flujos, umbrales y aprobaciones viajan como código, no como configuración opaca.</span></div>
-            <div class="evidence"><strong>Trazabilidad completa</strong><span>Origen, actor, versión y motivo quedan unidos en la misma cadena de decisión.</span></div>
-            <div class="evidence"><strong>Salud de conectores</strong><span>Frescura, latencia y credenciales se muestran con estado legible y sin dramatismo.</span></div>
-          </div>
         </div>
 
-        <aside class="panel" aria-label="Vista previa del producto" data-od-id="path-1-0-0-1">
-          <div class="panel-head" data-od-id="path-1-0-0-1-0">
+        <aside class="panel" aria-label="Vista previa del producto">
+          <div class="panel-head">
             <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="label">Vista previa</div>
           </div>
-          <div class="panel-body" data-od-id="path-1-0-0-1-1">
+          <div class="panel-body">
             <div class="playbook-slab">
               <div class="slab-top">
                 <div>
-                  <h3 data-od-id="path-1-0-0-1-1-0-0-0-0">Orquestación de una investigación</h3>
+                  <h3>Orquestación de una investigación</h3>
                   <div style="margin-top:6px;color:var(--muted);font-size:.86rem">Cada paso queda trazado. Cada decisión queda vinculada.</div>
                 </div>
                 <span class="chip">Activo</span>
               </div>
-              <div class="playbook-tabs" role="tablist" aria-label="Flujos de ejemplo">
-                <button type="button" data-playbook-tab="" aria-pressed="true" data-playbook="triage" data-od-id="path-1-0-0-1-1-0-1-0">Triaje</button>
-                <button type="button" data-playbook-tab="" aria-pressed="false" data-playbook="campaign" data-od-id="path-1-0-0-1-1-0-1-1">Campaña</button>
-                <button type="button" data-playbook-tab="" aria-pressed="false" data-playbook="exposure" data-od-id="path-1-0-0-1-1-0-1-2">Exposición</button>
+              <div class="playbook-tabs" role="tablist" aria-label="Playbooks de ejemplo">
+                <button type="button" data-playbook-tab aria-pressed="true" data-playbook="triage">Triage</button>
+                <button type="button" data-playbook-tab aria-pressed="false" data-playbook="campaign">Campaña</button>
+                <button type="button" data-playbook-tab aria-pressed="false" data-playbook="exposure">Exposición</button>
               </div>
               <div class="playbook-grid">
-                <div class="flow" id="playbook-flow" aria-live="polite" data-od-id="path-1-0-0-1-1-0-2-0">
-                  <div class="row" data-od-id="path-1-0-0-1-1-0-2-0-0"><div class="dot">01</div><div class="text"><strong>Normalizar señales</strong><span>Conectores, contexto, entidades y metadatos alineados.</span></div><div class="status">Listo</div></div>
-                  <div class="row" data-od-id="path-1-0-0-1-1-0-2-0-1"><div class="dot" style="background:linear-gradient(135deg,var(--emerald),#1aa07f)">02</div><div class="text"><strong>Correlacionar y puntuar</strong><span>Reglas y enriquecimiento con trazabilidad por paso.</span></div><div class="status">Esmeralda</div></div>
-                  <div class="row" data-od-id="path-1-0-0-1-1-0-2-0-2"><div class="dot" style="background:linear-gradient(135deg,var(--amber),#d6a33a)">03</div><div class="text"><strong>Ejecutar y registrar</strong><span>Playbook versionado, aprobaciones y evidencia final.</span></div><div class="status">Auditable</div></div>
+                <div class="flow" id="playbook-flow" aria-live="polite">
+                  <div class="row"><div class="dot">01</div><div class="text"><strong>Normalizar señales</strong><span>Conectores, contexto, entidades y metadatos alineados.</span></div><div class="status">Listo</div></div>
+                  <div class="row"><div class="dot" style="background:linear-gradient(135deg,var(--emerald),#1aa07f)">02</div><div class="text"><strong>Correlacionar y puntuar</strong><span>Reglas y enriquecimiento con trazabilidad por paso.</span></div><div class="status">Esmeralda</div></div>
+                  <div class="row"><div class="dot" style="background:linear-gradient(135deg,var(--amber),#d6a33a)">03</div><div class="text"><strong>Ejecutar y registrar</strong><span>Playbook versionado, aprobaciones y evidencia final.</span></div><div class="status">Auditable</div></div>
                 </div>
                 <div class="signal">
                   <div class="metric">
@@ -1261,32 +958,16 @@
                   </div>
                 </div>
               </div>
-              <div class="preview-state" aria-label="Estado de carga del producto">
-                <div class="preview-state-head">
-                  <strong><span class="live-dot" aria-hidden="true"></span>Actualizando procedencia</strong>
-                  <small>hace 12 s</small>
-                </div>
-                <div class="loading-skeleton" aria-hidden="true">
-                  <span class="wide"></span>
-                  <span></span>
-                  <span class="short"></span>
-                </div>
-              </div>
-              <div class="proof-strip">
-                <div class="proof"><span>Origen</span><strong>Correo, tickets y feeds de inteligencia con origen visible.</strong></div>
-                <div class="proof"><span>Prueba</span><strong>Diffs legibles, aprobaciones y vuelta atrás sin perder contexto.</strong></div>
-                <div class="proof"><span>Salida</span><strong>Handoff al SOC, mensajería o SIEM con rastro completo.</strong></div>
-              </div>
             </div>
           </div>
         </aside>
       </div>
     </section>
 
-    <section class="section" id="posicionamiento" data-od-id="path-1-1">
-      <div class="wrap" data-od-id="path-1-1-0">
+    <section class="section" id="posicionamiento">
+      <div class="wrap">
         <div class="section-head">
-          <h2 data-od-id="path-1-1-0-0-0">No es OSINT. No es un reemplazo de SIEM. No es una plataforma genérica más.</h2>
+          <h2>No es OSINT. No es un reemplazo de SIEM. No es una plataforma genérica más.</h2>
           <p>TaQ Engine es una capa programable de ejecución para inteligencia de amenazas: define flujos, conserva contexto y convierte decisiones en operaciones repetibles.</p>
         </div>
         <div class="positioning">
@@ -1297,46 +978,32 @@
       </div>
     </section>
 
-    <section class="section" id="playbooks" data-od-id="path-1-2">
-      <div class="wrap" data-od-id="path-1-2-0">
+    <section class="section" id="playbooks">
+      <div class="wrap">
         <div class="section-head">
-          <h2 data-od-id="path-1-2-0-0-0">Flujos que se leen como sistemas, no como diagramas decorativos.</h2>
+          <h2>Playbooks que se leen como sistemas, no como diagramas decorativos.</h2>
           <p>La visualización interactiva expone pasos, dependencias y salida esperada. El usuario cambia de contexto sin cambiar de lenguaje.</p>
         </div>
         <div class="wide">
           <div class="matrix">
             <div class="stack">
               <div class="module">
-                <div class="title"><strong>Flujo seleccionado</strong><span id="selected-playbook" data-od-id="path-1-2-0-1-0-0-0-0-1">Triaje</span></div>
-                <p id="selected-summary" data-od-id="path-1-2-0-1-0-0-0-1">Entra una señal, se normaliza, se correlaciona y se entrega una decisión auditada al equipo adecuado.</p>
+                <div class="title"><strong>Playbook seleccionado</strong><span id="selected-playbook">Triage</span></div>
+                <p id="selected-summary">Entra una señal, se normaliza, se correlaciona y se entrega una decisión auditada al equipo adecuado.</p>
               </div>
               <div class="module">
                 <div class="title"><strong>Puntos de control</strong><span>Gobierno</span></div>
                 <p>Versionado, aprobaciones, excepciones y retorno a estado anterior con evidencia visible para cada cambio.</p>
-                <div class="meta-list">
-                  <span>Autor y revisor visibles</span>
-                  <span>Diff semántico de cambios</span>
-                  <span>Rollback sin perder contexto</span>
-                </div>
-              </div>
-              <div class="module">
-                <div class="title"><strong>Prueba operativa</strong><span>Fuente de verdad</span></div>
-                <p>workflow.yml, score thresholds y comentarios de aprobación se leen como piezas de infraestructura, no como copia de marketing.</p>
-                <div class="meta-list">
-                  <span>playbook.yml</span>
-                  <span>audit.log</span>
-                  <span>provenance.json</span>
-                </div>
               </div>
             </div>
             <div class="stack">
               <div class="module">
                 <div class="title"><strong>Secuencia</strong><span>Flujo</span></div>
-                <p>Conectores de entrada → normalización → scoring → decisión → registro. Cada transición conserva contexto y deja un rastro explícito.</p>
+                <p>Conectores de entrada → normalización → scoring → decisión → registro. Cada transición conserva contexto.</p>
               </div>
               <div class="module">
                 <div class="title"><strong>Salida</strong><span>Acción</span></div>
-                <p>Notificación al SOC, creación de caso, enriquecimiento posterior o cierre con trazabilidad completa y versión asociada.</p>
+                <p>Notificación al SOC, creación de caso, enriquecimiento posterior o cierre con trazabilidad completa.</p>
               </div>
             </div>
           </div>
@@ -1344,33 +1011,33 @@
       </div>
     </section>
 
-    <section class="section" id="workflow" data-od-id="path-1-3">
-      <div class="wrap" data-od-id="path-1-3-0">
+    <section class="section" id="workflow">
+      <div class="wrap">
         <div class="section-head">
-          <h2 data-od-id="path-1-3-0-0-0">Investigación guiada con una narrativa de operación continua.</h2>
+          <h2>Investigación guiada con una narrativa de operación continua.</h2>
           <p>El scroll cuenta la historia del trabajo: detectar, confirmar, enriquecer, decidir y conservar evidencia. Sin teatralidad, con precisión.</p>
         </div>
         <div class="story">
           <div class="story-list">
-            <article class="story-step is-visible" data-story-step="" data-od-id="path-1-3-0-1-0-0">
-              <div class="num" data-od-id="path-1-3-0-1-0-0-0">1</div>
-              <h3 data-od-id="path-1-3-0-1-0-0-1">Señal inicial</h3>
-              <p>La investigación parte de un evento, un lote de indicadores o un cambio de comportamiento con origen explícito y propietario visible.</p>
+            <article class="story-step is-visible" data-story-step>
+              <div class="num">1</div>
+              <h3>Señal inicial</h3>
+              <p>La investigación parte de un evento, un lote de indicadores o un cambio de comportamiento que merece contexto.</p>
             </article>
-            <article class="story-step" data-story-step="" data-od-id="path-1-3-0-1-0-1">
-              <div class="num" data-od-id="path-1-3-0-1-0-1-0">2</div>
-              <h3 data-od-id="path-1-3-0-1-0-1-1">Enriquecimiento</h3>
-              <p>TaQ cruza fuentes, resuelve entidades y preserva el origen de cada dato para que la confianza sea explícita en cada paso.</p>
+            <article class="story-step" data-story-step>
+              <div class="num">2</div>
+              <h3>Enriquecimiento</h3>
+              <p>TaQ cruza fuentes, resuelve entidades y preserva el origen de cada dato para que la confianza sea explícita.</p>
             </article>
-            <article class="story-step" data-story-step="" data-od-id="path-1-3-0-1-0-2">
-              <div class="num" data-od-id="path-1-3-0-1-0-2-0">3</div>
-              <h3 data-od-id="path-1-3-0-1-0-2-1">Decisión</h3>
-              <p>El playbook propone la siguiente acción y muestra por qué la recomendación es consistente con el contexto y el umbral aplicado.</p>
+            <article class="story-step" data-story-step>
+              <div class="num">3</div>
+              <h3>Decisión</h3>
+              <p>El playbook propone la siguiente acción y muestra por qué la recomendación es consistente con el contexto.</p>
             </article>
-            <article class="story-step" data-story-step="" data-od-id="path-1-3-0-1-0-3">
-              <div class="num" data-od-id="path-1-3-0-1-0-3-0">4</div>
-              <h3 data-od-id="path-1-3-0-1-0-3-1">Cierre auditable</h3>
-              <p>El resultado queda registrado, versionado y listo para revisar o reutilizar en futuras investigaciones sin perder la cadena de evidencia.</p>
+            <article class="story-step" data-story-step>
+              <div class="num">4</div>
+              <h3>Cierre auditable</h3>
+              <p>El resultado queda registrado, versionado y listo para revisar o reutilizar en futuras investigaciones.</p>
             </article>
           </div>
           <div class="story-rail">
@@ -1383,7 +1050,7 @@
                 <span class="pulse"></span>
                 <div class="copy">
                   <strong>Entrada de señal</strong>
-                  <span>Conector de correo y alertas de reputación entregan la primera pista con origen registrado.</span>
+                  <span>Conector de correo y alertas de reputación entregan la primera pista.</span>
                 </div>
                 <div class="tag">ingesta</div>
               </div>
@@ -1391,7 +1058,7 @@
                 <span class="pulse" style="box-shadow:0 0 0 6px rgba(200,138,23,.12); background:radial-gradient(circle at 35% 35%, #fff, var(--amber))"></span>
                 <div class="copy">
                   <strong>Normalización y scoring</strong>
-                  <span>Se consolidan entidades, se enriquecen atributos y se actualiza el riesgo con una razón legible.</span>
+                  <span>Se consolidan entidades, se enriquecen atributos y se actualiza el riesgo.</span>
                 </div>
                 <div class="tag">scoring</div>
               </div>
@@ -1399,7 +1066,7 @@
                 <span class="pulse"></span>
                 <div class="copy">
                   <strong>Escalado al equipo adecuado</strong>
-                  <span>El playbook asigna la investigación al rol correcto sin romper el contexto ni la trazabilidad.</span>
+                  <span>El playbook asigna la investigación al rol correcto sin romper el contexto.</span>
                 </div>
                 <div class="tag">handoff</div>
               </div>
@@ -1409,52 +1076,52 @@
       </div>
     </section>
 
-    <section class="section" id="arquitectura" data-od-id="path-1-4">
-      <div class="wrap" data-od-id="path-1-4-0">
+    <section class="section" id="arquitectura">
+      <div class="wrap">
         <div class="section-head">
-          <h2 data-od-id="path-1-4-0-0-0">Arquitectura de producto que separa ejecución, evidencia y control.</h2>
+          <h2>Arquitectura de producto que separa ejecución, evidencia y control.</h2>
           <p>La superficie visual se organiza como un sistema: conectores, motor, reglas, almacenamiento y trazabilidad. Nada se mezcla sin propósito.</p>
         </div>
         <div class="architecture">
           <div class="layers">
-            <div class="layer"><div><strong>Conectores</strong><span>Entrada, salud y frescura visibles</span></div><div class="pill">01</div></div>
+            <div class="layer"><div><strong>Conectores</strong><span>Entrada y sincronización de fuentes</span></div><div class="pill">01</div></div>
             <div class="layer"><div><strong>Motor de ejecución</strong><span>Flujos, reglas y orquestación</span></div><div class="pill">02</div></div>
             <div class="layer"><div><strong>Modelo de inteligencia</strong><span>Entidades, contexto y scoring</span></div><div class="pill">03</div></div>
             <div class="layer"><div><strong>Gobernanza</strong><span>Versionado, acceso y auditoría</span></div><div class="pill">04</div></div>
           </div>
           <div class="card">
-            <h2 data-od-id="path-1-4-0-1-1-0">Una plataforma que se comporta como infraestructura, no como demo.</h2>
-            <p>Las capas están diseñadas para soportar documentación, operaciones y revisión ejecutiva sin que la interfaz pierda sobriedad ni esconda el trabajo real.</p>
+            <h2>Una plataforma que se comporta como infraestructura, no como demo.</h2>
+            <p>Las capas están diseñadas para soportar documentación, operaciones y revisión ejecutiva sin que la interfaz pierda sobriedad.</p>
             <ul>
-              <li>Configuración con expectativas claras y salida predecible.</li>
-              <li>Persistencia de contexto en cada paso y en cada handoff.</li>
-              <li>Relación directa entre acción, autor, versión y comentario.</li>
-              <li>Superficies legibles para analistas, ingeniería y liderazgo.</li>
+              <li>Configuración con expectativas claras.</li>
+              <li>Persistencia de contexto en cada paso.</li>
+              <li>Relación directa entre acción, autor y versión.</li>
+              <li>Superficies listadas para analistas y líderes de seguridad.</li>
             </ul>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="connectores" data-od-id="path-1-5">
-      <div class="wrap" data-od-id="path-1-5-0">
+    <section class="section" id="connectores">
+      <div class="wrap">
         <div class="section-head">
-          <h2 data-od-id="path-1-5-0-0-0">Ecosistema de conectores con estado legible y mantenimiento visible.</h2>
+          <h2>Ecosistema de conectores con estado legible y mantenimiento visible.</h2>
           <p>El sistema enseña disponibilidad, latencia y nivel de confianza sin convertir el panel en una pared de alertas rojas.</p>
         </div>
         <div class="connector-grid">
-          <div class="connector"><span class="pill">Entrada</span><strong>Correo, tickets y alertas</strong><span>Fuentes operativas que alimentan investigaciones y playbooks desde el primer día, con origen visible.</span></div>
-          <div class="connector"><span class="pill emerald">Enriquecimiento</span><strong>Threat intel y reputación</strong><span>Fuentes externas y listas internas con origen, frescura y confianza visibles.</span></div>
-          <div class="connector"><span class="pill">Salida</span><strong>SIEM, SOAR y mensajería</strong><span>Entrega de decisiones donde el equipo ya trabaja, con rastreo hasta la acción original.</span></div>
-          <div class="connector"><span class="pill amber">Gobierno</span><strong>Gestión y permisos</strong><span>Conectores aprobados, rotación segura de credenciales y registro detallado para revisión.</span></div>
+          <div class="connector"><span class="pill">Entrada</span><strong>Correo, tickets y alertas</strong><span>Fuentes operativas que alimentan investigaciones y playbooks desde el primer día.</span></div>
+          <div class="connector"><span class="pill emerald">Enriquecimiento</span><strong>Threat intel y reputación</strong><span>Fuentes externas y listas internas con origen y frescura visibles.</span></div>
+          <div class="connector"><span class="pill">Salida</span><strong>SIEM, SOAR y mensajería</strong><span>Entrega de decisiones donde el equipo ya trabaja.</span></div>
+          <div class="connector"><span class="pill amber">Gobierno</span><strong>Gestión y permisos</strong><span>Conectores aprobados, rotación segura de credenciales y registro detallado.</span></div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="puntuacion" data-od-id="path-1-6">
-      <div class="wrap" data-od-id="path-1-6-0">
+    <section class="section" id="puntuacion">
+      <div class="wrap">
         <div class="section-head">
-          <h2 data-od-id="path-1-6-0-0-0">Puntuación y señal con una lectura más cercana al trabajo real.</h2>
+          <h2>Puntuación y señal con una lectura más cercana al trabajo real.</h2>
           <p>La analítica se dibuja con espacio suficiente para entender por qué una investigación sube, baja o se mantiene abierta.</p>
         </div>
         <div class="scoreboard">
@@ -1482,10 +1149,10 @@
       </div>
     </section>
 
-    <section class="section" id="seguridad" data-od-id="path-1-7">
-      <div class="wrap" data-od-id="path-1-7-0">
+    <section class="section" id="seguridad">
+      <div class="wrap">
         <div class="section-head">
-          <h2 data-od-id="path-1-7-0-0-0">Seguridad y gobernanza visibles sin parecer una consola dura.</h2>
+          <h2>Seguridad y gobernanza visibles sin parecer una consola dura.</h2>
           <p>La confianza se construye con permisos, historia y controles claros. El diseño mantiene el lenguaje de una plataforma enterprise seria.</p>
         </div>
         <div class="govern">
@@ -1496,17 +1163,17 @@
       </div>
     </section>
 
-    <section class="section" id="docs" data-od-id="path-1-8">
-      <div class="wrap" data-od-id="path-1-8-0">
+    <section class="section" id="docs">
+      <div class="wrap">
         <div class="section-head">
-          <h2 data-od-id="path-1-8-0-0-0">Documentación que parece parte del producto, no un anexo.</h2>
+          <h2>Documentación que parece parte del producto, no un anexo.</h2>
           <p>La vista previa combina guía de uso, referencias y ejemplos técnicos para que el equipo entienda la plataforma sin salir de la experiencia.</p>
         </div>
         <div class="docs">
           <div class="doc-card">
-            <h3 data-od-id="path-1-8-0-1-0-0">Capítulos destacados</h3>
+            <h3>Capítulos destacados</h3>
             <div class="doc-list">
-              <div class="line"><span>Conceptos clave</span><span>Flujos, entidades, scoring</span></div>
+              <div class="line"><span>Conceptos clave</span><span>Playbooks, entidades, scoring</span></div>
               <div class="line"><span>Guía de inicio</span><span>Conectores, permisos, primer flujo</span></div>
               <div class="line"><span>Operación segura</span><span>Gobernanza, auditoría, revisión</span></div>
             </div>
@@ -1523,17 +1190,16 @@
   score using confidence * criticality
   branch if score &gt; threshold
   record decision with version and actor
-  attach provenance.source + audit.comment
 }</pre>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="comparativa" data-od-id="path-1-9">
-      <div class="wrap compare" data-od-id="path-1-9-0">
+    <section class="section" id="comparativa">
+      <div class="wrap compare">
         <div class="section-head">
-          <h2 data-od-id="path-1-9-0-0-0">Free frente a Premium: diferencia de capacidad, control y gobierno.</h2>
+          <h2>Free frente a Premium: diferencia de capacidad, control y gobierno.</h2>
           <p>La comparativa se centra en lo que equipos de seguridad realmente evalúan: escala, trazabilidad, colaboración y control.</p>
         </div>
         <table aria-label="Comparativa de planes">
@@ -1541,7 +1207,7 @@
             <tr><th>Capacidad</th><th>Free</th><th>Premium</th></tr>
           </thead>
           <tbody>
-            <tr><td>Flujos versionados</td><td class="no">Básico</td><td class="ok">Completo</td></tr>
+            <tr><td>Playbooks versionados</td><td class="no">Básico</td><td class="ok">Completo</td></tr>
             <tr><td>Auditoría detallada</td><td class="no">Limitada</td><td class="ok">Sí</td></tr>
             <tr><td>Conectores gestionados</td><td class="no">Pocos</td><td class="ok">Amplio</td></tr>
             <tr><td>Colaboración entre equipos</td><td class="no">Simple</td><td class="ok">Avanzada</td></tr>
@@ -1551,15 +1217,15 @@
       </div>
     </section>
 
-    <section class="section" id="responsive" data-od-id="path-1-10">
-      <div class="wrap" data-od-id="path-1-10-0">
+    <section class="section" id="responsive">
+      <div class="wrap">
         <div class="section-head">
-          <h2 data-od-id="path-1-10-0-0-0">La experiencia se adapta a escritorio y móvil sin redibujar el producto.</h2>
+          <h2>La experiencia se adapta a escritorio y móvil sin redibujar el producto.</h2>
           <p>El sistema conserva densidad y ritmo en pantallas grandes, pero reordena bloques y controles para que la lectura siga siendo rápida en móvil.</p>
         </div>
         <div class="responsive">
           <div class="device">
-            <h3 data-od-id="path-1-10-0-1-0-0">Escritorio</h3>
+            <h3>Escritorio</h3>
             <p>Paneles amplios, jerarquía horizontal y módulos de información con suficiente aire para leer sin fatiga.</p>
             <div class="frame">
               <div class="screen">
@@ -1571,7 +1237,7 @@
             </div>
           </div>
           <div class="device">
-            <h3 data-od-id="path-1-10-0-1-1-0">Móvil</h3>
+            <h3>Móvil</h3>
             <p>El contenido se apila, la navegación se simplifica y los bloques clave mantienen prioridad visual.</p>
             <div class="frame">
               <div class="screen" style="min-height:280px">
@@ -1586,25 +1252,25 @@
       </div>
     </section>
 
-    <section class="section cta" id="cta" data-od-id="path-1-11">
-      <div class="wrap" data-od-id="path-1-11-0">
+    <section class="section cta" id="cta">
+      <div class="wrap">
         <div class="cta-box">
           <div>
             <span class="eyebrow" style="background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.12); color:rgba(255,255,255,.78)"><b style="color:#fff">Siguiente paso</b> acceso guiado</span>
-            <h2 style="margin-top:16px;font-size:clamp(2.3rem, 4vw, 4.2rem);line-height:.95;max-width:12ch" data-od-id="path-1-11-0-0-0-1">Lleva TaQ Engine a una revisión seria.</h2>
-            <p>La experiencia está pensada para equipos de seguridad empresariales que necesitan un producto creíble, claro y suficientemente sofisticado para operar inteligencia de amenazas como infraestructura, con pruebas visibles de operación real.</p>
+            <h2 style="margin-top:16px;font-size:clamp(2.3rem, 4vw, 4.2rem);line-height:.95;max-width:12ch">Lleva TaQ Engine a una revisión seria.</h2>
+            <p>La experiencia está pensada para equipos de seguridad empresariales que necesitan un producto creíble, claro y suficientemente sofisticado para operar inteligencia de amenazas como infraestructura.</p>
           </div>
           <div class="cta-actions">
-            <a class="btn primary" href="/dashboard" data-od-id="path-1-11-0-0-1-0">Ver dashboard</a>
-            <a class="btn secondary" href="index.html" data-od-id="path-1-11-0-0-1-1">Volver al sistema</a>
+            <a class="btn primary" href="dashboard.html">Ver dashboard</a>
+            <a class="btn secondary" href="system.html">Volver al sistema</a>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="footer" data-od-id="path-2">
-    <div class="wrap" data-od-id="path-2-0">
+  <footer class="footer">
+    <div class="wrap">
       <div><strong>TaQ Engine</strong> · Threat Intelligence. Defined as Code.</div>
       <div>Diseño editorial, confianza enterprise y motion funcional.</div>
     </div>
@@ -1618,7 +1284,7 @@
       var stories = Array.prototype.slice.call(document.querySelectorAll('[data-story-step]'));
       var presets = {
         triage: {
-          title: 'Triaje',
+          title: 'Triage',
           summary: 'Entra una señal, se normaliza, se correlaciona y se entrega una decisión auditada al equipo adecuado.'
         },
         campaign: {
@@ -1647,201 +1313,5 @@
       stories.forEach(function(step){ obs.observe(step); });
     })();
   </script>
-
-
-<script data-od-snapshot-bridge>(function(){
-  var SNAPSHOT_STYLE_PROPS = [
-    'display','position','box-sizing','width','height','min-width','max-width','min-height','max-height',
-    'margin','margin-top','margin-right','margin-bottom','margin-left',
-    'padding','padding-top','padding-right','padding-bottom','padding-left',
-    'border','border-top','border-right','border-bottom','border-left','border-radius',
-    'font','font-family','font-size','font-weight','font-style','line-height','letter-spacing',
-    'color','background-color','opacity','transform','transform-origin','overflow','overflow-x','overflow-y',
-    'white-space','text-align','vertical-align','object-fit','object-position',
-    'flex','flex-direction','flex-wrap','flex-grow','flex-shrink','flex-basis',
-    'grid','grid-template-columns','grid-template-rows','grid-column','grid-row',
-    'gap','row-gap','column-gap','align-items','align-content','align-self',
-    'justify-items','justify-content','justify-self','inset','top','right','bottom','left',
-    'z-index','box-shadow','text-shadow'
-  ];
-  function copyComputedStyle(source, target){
-    if (!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
-    var computed = window.getComputedStyle(source);
-    var style = target.getAttribute('style') || '';
-    for (var i = 0; i < SNAPSHOT_STYLE_PROPS.length; i++){
-      var prop = SNAPSHOT_STYLE_PROPS[i];
-      var value = computed.getPropertyValue(prop);
-      if (value) style += prop + ':' + value + ';';
-    }
-    target.setAttribute('style', style);
-  }
-  function syncElementState(source, target){
-    var tag = source.tagName ? source.tagName.toLowerCase() : '';
-    if (tag === 'img' && source.currentSrc) target.setAttribute('src', source.currentSrc);
-    if (tag === 'input' || tag === 'textarea') target.setAttribute('value', source.value || '');
-    if (tag === 'canvas') {
-      try {
-        var img = document.createElement('img');
-        img.setAttribute('src', source.toDataURL('image/png'));
-        img.setAttribute('style', target.getAttribute('style') || '');
-        target.parentNode && target.parentNode.replaceChild(img, target);
-      } catch (_) {}
-    }
-  }
-  function inlineSnapshotStyles(originalRoot, cloneRoot){
-    copyComputedStyle(originalRoot, cloneRoot);
-    syncElementState(originalRoot, cloneRoot);
-    var originals = originalRoot.querySelectorAll('*');
-    var clones = cloneRoot.querySelectorAll('*');
-    var count = Math.min(originals.length, clones.length, 3500);
-    for (var i = 0; i < count; i++){
-      copyComputedStyle(originals[i], clones[i]);
-      syncElementState(originals[i], clones[i]);
-    }
-    var scripts = cloneRoot.querySelectorAll('script');
-    for (var s = scripts.length - 1; s >= 0; s--) scripts[s].remove();
-    var links = cloneRoot.querySelectorAll('link[rel~="stylesheet"], link[rel~="preload"], link[rel~="preconnect"]');
-    for (var l = links.length - 1; l >= 0; l--) links[l].remove();
-    var styles = cloneRoot.querySelectorAll('style');
-    for (var st = 0; st < styles.length; st++) {
-      styles[st].textContent = (styles[st].textContent || '')
-        .replace(/@import[^;]+;/gi, '')
-        .replace(/@font-face\s*\{[^}]*\}/gi, '');
-    }
-  }
-  function pruneHiddenSnapshotNodes(originalRoot, cloneRoot){
-    var originals = originalRoot.querySelectorAll('*');
-    var clones = cloneRoot.querySelectorAll('*');
-    var count = Math.min(originals.length, clones.length);
-    var removals = [];
-    for (var i = 0; i < count; i++){
-      var original = originals[i];
-      var clone = clones[i];
-      if (!original || !clone || !clone.parentNode) continue;
-      var computed = window.getComputedStyle(original);
-      if (computed && (computed.display === 'none' || computed.visibility === 'hidden')) {
-        removals.push(clone);
-      }
-    }
-    for (var r = removals.length - 1; r >= 0; r--){
-      if (removals[r].parentNode) removals[r].parentNode.removeChild(removals[r]);
-    }
-  }
-  function waitForImages(){
-    var imgs = Array.prototype.slice.call(document.images || []);
-    return Promise.all(imgs.map(function(img){
-      if (img.complete) return Promise.resolve();
-      return new Promise(function(resolve){
-        img.addEventListener('load', resolve, { once: true });
-        img.addEventListener('error', resolve, { once: true });
-      });
-    }));
-  }
-  function scrollOffset(){
-    var doc = document.documentElement;
-    var body = document.body;
-    return {
-      x: Math.max(window.scrollX || 0, doc ? doc.scrollLeft || 0 : 0, body ? body.scrollLeft || 0 : 0),
-      y: Math.max(window.scrollY || 0, doc ? doc.scrollTop || 0 : 0, body ? body.scrollTop || 0 : 0)
-    };
-  }
-  function escapeAttribute(value){
-    return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-  }
-  function snapshotBackgroundColor(){
-    try {
-      var probe = window.getComputedStyle(document.body || document.documentElement);
-      var bg = probe && probe.backgroundColor || '';
-      if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') return '#ffffff';
-      return bg;
-    } catch (_) { return '#ffffff'; }
-  }
-  // After painting, sample the canvas: a uniform (single-color) bitmap means
-  // the foreignObject rasterizer painted nothing — Chromium frequently refuses
-  // to paint <foreignObject> HTML loaded via <img>. Treating that as an honest
-  // 'empty-render' error (instead of shipping the background-only frame) lets
-  // the host fall back / surface a real failure rather than a silent black PNG.
-  function canvasLooksBlank(ctx, cw, ch){
-    try {
-      var data = ctx.getImageData(0, 0, cw, ch).data;
-      var step = Math.max(4, Math.floor((cw * ch) / 4096)) * 4;
-      var first = null, samples = 0;
-      for (var i = 0; i + 3 < data.length; i += step){
-        samples++;
-        if (!first){ first = [data[i], data[i+1], data[i+2], data[i+3]]; continue; }
-        if (Math.abs(data[i]-first[0]) > 6 || Math.abs(data[i+1]-first[1]) > 6 ||
-            Math.abs(data[i+2]-first[2]) > 6 || Math.abs(data[i+3]-first[3]) > 6) return false;
-      }
-      return samples > 8;
-    } catch (_) { return false; }
-  }
-  function renderSnapshot(id){
-    var w = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
-    var h = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
-    var dpr = window.devicePixelRatio || 1;
-    var bgColor = snapshotBackgroundColor();
-    var docW = Math.max(w, document.documentElement.scrollWidth || 0, document.body ? document.body.scrollWidth : 0);
-    var docH = Math.max(h, document.documentElement.scrollHeight || 0, document.body ? document.body.scrollHeight : 0);
-    var clone = document.documentElement.cloneNode(true);
-    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-    inlineSnapshotStyles(document.documentElement, clone);
-    pruneHiddenSnapshotNodes(document.documentElement, clone);
-    var scroll = scrollOffset();
-    var cloneBody = clone.querySelector('body');
-    var rootStyle = clone.getAttribute('style') || '';
-    var bodyStyle = cloneBody ? cloneBody.getAttribute('style') || '' : '';
-    var bodyContent = cloneBody ? cloneBody.innerHTML : clone.innerHTML;
-    var wrapperStyle = rootStyle + bodyStyle +
-      'margin:0;position:relative;left:' + (-scroll.x) + 'px;top:' + (-scroll.y) + 'px;' +
-      'width:' + docW + 'px;height:' + docH + 'px;overflow:visible;';
-    var html = '<div xmlns="http://www.w3.org/1999/xhtml" style="' + escapeAttribute(wrapperStyle) + '">' + bodyContent + '</div>';
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
-      '<foreignObject x="0" y="0" width="' + docW + '" height="' + docH + '">' +
-      html +
-      '</foreignObject></svg>';
-    var img = new Image();
-    img.onload = function(){
-      try {
-        var canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.floor(w * dpr));
-        canvas.height = Math.max(1, Math.floor(h * dpr));
-        var ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('no 2d context');
-        ctx.scale(dpr, dpr);
-        // Opaque base so a transparent (un-painted) raster never flattens to
-        // pure black in clipboards / PNG viewers.
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
-        if (canvasLooksBlank(ctx, canvas.width, canvas.height)) {
-          window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: 'empty-render' }, '*');
-          return;
-        }
-        window.parent.postMessage({ type: 'od:snapshot:result', id: id, dataUrl: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }, '*');
-      } catch (err) {
-        window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: String(err && err.message || err) }, '*');
-      }
-    };
-    function encodedSvgDataUrl(){
-      var encoded = encodeURIComponent(svg);
-      return 'data:image/svg+xml;charset=utf-8,' + encoded;
-    }
-    img.onerror = function(){
-      window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: 'snapshot image failed' }, '*');
-    };
-    img.src = encodedSvgDataUrl();
-  }
-  window.addEventListener('message', function(ev){
-    var data = ev && ev.data;
-    if (!data || data.type !== 'od:snapshot' || !data.id) return;
-    waitForImages().then(function(){ renderSnapshot(String(data.id)); });
-  });
-})();</script><script data-od-srcdoc-transport-activation>(function(){
-  window.addEventListener('message', function(ev){
-    var data = ev && ev.data;
-    if (!data || data.type !== 'od:srcdoc-transport-activate' || typeof data.html !== 'string') return;
-    document.open();
-    document.write(data.html);
-    document.close();
-  });
-})();</script></body></html>
+</body>
+</html>

@@ -1,1016 +1,2094 @@
-<!doctype html>
-<html lang="es-ES"><head><script data-od-sandbox-shim>(function(){
-  function makeStore(){
-    var data = {};
-    var api = {
-      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
-      setItem: function(k, v){ data[k] = String(v); },
-      removeItem: function(k){ delete data[k]; },
-      clear: function(){ data = {}; },
-      key: function(i){ return Object.keys(data)[i] || null; }
-    };
-    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
-    return api;
-  }
-  function tryShim(name){
-    var works = false;
-    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
-    catch (_) { works = false; }
-    if (works) return;
-    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
-    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
-  }
-  tryShim('localStorage');
-  tryShim('sessionStorage');
-  document.addEventListener('click', (e) => {
-    if (!e.target || !(e.target instanceof Element)) return;
-    var link = e.target.closest('a[href]');
-    if (!link) return;
-    var href = link.getAttribute('href');
-    if (href === null) return;
-    var isAnchor = href.startsWith('#') || href === '';
-    if (isAnchor) {
-      e.preventDefault();
-      if (href === '' || href === '#') {
-        window.scrollTo({ top: 0 });
-        history.replaceState(null, '', ' ');
-      } else {
-        var targetId = href.slice(1);
-        var target = targetId ? document.getElementById(targetId) : null;
-        if (target) {
-          target.scrollIntoView();
-          location.hash === href && history.replaceState(null, '', ' ');
-          location.hash = href;
-        }
-      }
-    } else if (link.getAttribute('target') === '_blank') {
-      e.preventDefault();
-      let safe = false;
-      try {
-        var url = new URL(href, location.href);
-        safe =
-          url.protocol === 'http:' ||
-          url.protocol === 'https:' ||
-          url.protocol === 'mailto:';
-      } catch (_) {}
-      safe && window.open(href, '_blank', 'noopener,noreferrer');
-    }
-  });
-})();</script>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TaQ Engine · Sistema visual y experiencias</title>
-  <style>
-    :root{
-      --bg:#eef3f8;
-      --bg-2:#f7fafc;
-      --surface:#ffffff;
-      --surface-2:#f3f7fb;
-      --line:#d9e3ef;
-      --line-strong:#b9c9db;
-      --text:#10253f;
-      --muted:#5e6e82;
-      --primary:#103e76;
-      --primary-2:#1a5aa3;
-      --emerald:#17816d;
-      --amber:#c88a17;
-      --shadow:0 30px 70px rgba(14, 33, 63, .11);
-      --shadow-soft:0 18px 40px rgba(14, 33, 63, .08);
-      --radius:28px;
-      --radius-sm:18px;
-      --font-display:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-      --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-      --grid:linear-gradient(rgba(16,37,63,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(16,37,63,.05) 1px, transparent 1px);
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      color:var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(16,62,118,.10), transparent 30%),
-        radial-gradient(circle at 80% 0%, rgba(23,129,109,.08), transparent 22%),
-        linear-gradient(180deg, #f7fbfe 0%, var(--bg) 58%, #e9eff6 100%);
-      font-family:var(--font-body);
-      -webkit-font-smoothing:antialiased;
-      text-rendering:optimizeLegibility;
-    }
-    body::before{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      opacity:.45;
-      background-size:48px 48px;
-      background-image:var(--grid);
-      mask-image:linear-gradient(180deg, rgba(0,0,0,.95), rgba(0,0,0,.25) 70%, transparent);
-    }
-    a{color:inherit}
-    .wrap{width:min(1240px, calc(100vw - 48px)); margin:0 auto}
-    .shell{position:relative; z-index:1}
-    .topbar{
-      position:sticky;
-      top:0;
-      z-index:40;
-      backdrop-filter:blur(18px);
-      background:rgba(247,250,252,.72);
-      border-bottom:1px solid rgba(185,201,219,.55);
-    }
-    .topbar .wrap{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      min-height:76px;
-      gap:18px;
-    }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      text-decoration:none;
-    }
-    .mark{
-      width:38px;
-      height:38px;
-      border-radius:12px;
-      background:
-        linear-gradient(135deg, rgba(16,62,118,1), rgba(23,129,109,.95));
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
-      position:relative;
-    }
-    .mark::after{
-      content:"";
-      position:absolute;
-      inset:10px 11px 10px 11px;
-      border:1.4px solid rgba(255,255,255,.84);
-      border-radius:8px;
-      transform:skewX(-8deg);
-    }
-    .brand strong{display:block; font-size:1rem; letter-spacing:-.03em}
-    .brand span{display:block; font-size:.78rem; color:var(--muted)}
-    .nav{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .nav a{
-      text-decoration:none;
-      font-size:.86rem;
-      color:var(--muted);
-      padding:10px 13px;
-      border-radius:999px;
-      border:1px solid transparent;
-      transition:background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
-    }
-    .nav a:hover{color:var(--text); background:rgba(255,255,255,.8); border-color:var(--line)}
-    .nav a.cta{
-      color:#fff;
-      background:var(--primary);
-      border-color:transparent;
-      box-shadow:0 12px 30px rgba(16,62,118,.18);
-    }
-    .nav a.cta:hover{transform:translateY(-1px); background:#0f3565}
-    .hero{
-      padding:62px 0 24px;
-    }
-    .hero-grid{
-      display:grid;
-      grid-template-columns:minmax(0, 1.1fr) minmax(420px, .9fr);
-      gap:28px;
-      align-items:stretch;
-    }
-    .eyebrow{
-      display:inline-flex;
-      gap:10px;
-      align-items:center;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.72);
-      color:var(--muted);
-      padding:10px 14px;
-      border-radius:999px;
-      font-size:.82rem;
-      letter-spacing:.02em;
-    }
-    .eyebrow b{color:var(--primary)}
-    h1,h2,h3{margin:0}
-    h1{
-      margin-top:20px;
-      font-family:var(--font-display);
-      font-size:clamp(3.5rem, 6.3vw, 6.9rem);
-      line-height:.95;
-      letter-spacing:-.06em;
-      max-width:11ch;
-    }
-    .lead{
-      margin:22px 0 0;
-      max-width:58ch;
-      font-size:1.08rem;
-      line-height:1.75;
-      color:var(--muted);
-    }
-    .hero-actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-      margin-top:28px;
-    }
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      min-height:48px;
-      padding:0 18px;
-      border-radius:999px;
-      text-decoration:none;
-      border:1px solid transparent;
-      font-weight:600;
-      letter-spacing:-.01em;
-      transition:transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
-    }
-    .btn.primary{
-      color:#fff;
-      background:linear-gradient(135deg, var(--primary), var(--primary-2));
-      box-shadow:0 18px 36px rgba(16,62,118,.18);
-    }
-    .btn.primary:hover{transform:translateY(-1px)}
-    .btn.secondary{
-      color:var(--text);
-      border-color:var(--line);
-      background:rgba(255,255,255,.78);
-    }
-    .btn.secondary:hover{border-color:var(--line-strong); transform:translateY(-1px)}
-    .hero-points{
-      margin-top:28px;
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-      gap:12px;
-    }
-    .mini{
-      padding:14px 15px;
-      background:rgba(255,255,255,.75);
-      border:1px solid var(--line);
-      border-radius:20px;
-      box-shadow:var(--shadow-soft);
-    }
-    .mini strong{display:block; font-size:.95rem; margin-bottom:6px}
-    .mini span{display:block; color:var(--muted); font-size:.84rem; line-height:1.45}
-    .preview{
-      border-radius:var(--radius);
-      border:1px solid rgba(185,201,219,.9);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.96), rgba(240,246,252,.96));
-      box-shadow:var(--shadow);
-      overflow:hidden;
-      position:relative;
-    }
-    .preview::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        radial-gradient(circle at 20% 15%, rgba(16,62,118,.16), transparent 32%),
-        radial-gradient(circle at 80% 18%, rgba(23,129,109,.15), transparent 24%);
-      pointer-events:none;
-    }
-    .preview-header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:18px 20px;
-      border-bottom:1px solid rgba(185,201,219,.65);
-      position:relative;
-      z-index:1;
-    }
-    .dots{display:flex; gap:8px}
-    .dots i{
-      width:11px;
-      height:11px;
-      border-radius:50%;
-      background:rgba(16,37,63,.14);
-    }
-    .preview-header .label{
-      font-size:.82rem;
-      color:var(--muted);
-      text-transform:uppercase;
-      letter-spacing:.14em;
-    }
-    .preview-body{
-      padding:22px;
-      display:grid;
-      gap:16px;
-      position:relative;
-      z-index:1;
-    }
-    .canvas{
-      background:rgba(255,255,255,.82);
-      border:1px solid var(--line);
-      border-radius:24px;
-      padding:18px;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
-    }
-    .canvas-top{
-      display:flex;
-      justify-content:space-between;
-      gap:14px;
-      align-items:flex-start;
-      margin-bottom:14px;
-    }
-    .canvas-top h3{
-      font-size:1.06rem;
-      letter-spacing:-.03em;
-    }
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 11px;
-      border-radius:999px;
-      background:rgba(23,129,109,.1);
-      color:var(--emerald);
-      font-size:.78rem;
-      font-weight:600;
-      white-space:nowrap;
-    }
-    .lane{
-      display:grid;
-      gap:10px;
-    }
-    .step{
-      display:grid;
-      grid-template-columns:56px 1fr auto;
-      align-items:center;
-      gap:12px;
-      padding:12px 14px;
-      border-radius:18px;
-      background:#fff;
-      border:1px solid var(--line);
-      position:relative;
-      overflow:hidden;
-    }
-    .step::after{
-      content:"";
-      position:absolute;
-      inset:auto 14px 0 70px;
-      height:2px;
-      background:linear-gradient(90deg, rgba(16,62,118,.1), rgba(23,129,109,.45), rgba(200,138,23,.4));
-      transform-origin:left center;
-      animation:flow 3.8s linear infinite;
-      opacity:.9;
-    }
-    @keyframes flow{
-      from{transform:scaleX(.25)}
-      50%{transform:scaleX(1)}
-      to{transform:scaleX(.25)}
-    }
-    .step strong{font-size:.9rem}
-    .step span{display:block; font-size:.82rem; color:var(--muted)}
-    .step .count{
-      width:52px;
-      height:52px;
-      border-radius:16px;
-      display:grid;
-      place-items:center;
-      color:#fff;
-      font-weight:700;
-      background:linear-gradient(135deg, var(--primary), var(--primary-2));
-      box-shadow:0 14px 24px rgba(16,62,118,.16);
-    }
-    .step .status{
-      color:var(--emerald);
-      font-size:.8rem;
-      font-weight:600;
-    }
-    .surface-grid{
-      margin-top:30px;
-      display:grid;
-      grid-template-columns:repeat(2, minmax(0, 1fr));
-      gap:18px;
-    }
-    .surface{
-      background:rgba(255,255,255,.76);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:24px;
-      box-shadow:var(--shadow-soft);
-      min-height:340px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      gap:18px;
-      overflow:hidden;
-      position:relative;
-    }
-    .surface::before{
-      content:"";
-      position:absolute;
-      inset:auto -12% -20% auto;
-      width:220px;
-      height:220px;
-      border-radius:50%;
-      background:radial-gradient(circle, rgba(16,62,118,.11), transparent 68%);
-      pointer-events:none;
-    }
-    .surface h2{
-      font-family:var(--font-display);
-      font-size:clamp(1.7rem, 2.4vw, 2.55rem);
-      line-height:1;
-      letter-spacing:-.04em;
-      max-width:14ch;
-    }
-    .surface p{
-      color:var(--muted);
-      line-height:1.7;
-      max-width:58ch;
-      margin:10px 0 0;
-    }
-    .surface-meta{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:auto;
-    }
-    .surface-meta span{
-      padding:9px 11px;
-      border-radius:999px;
-      background:#fff;
-      border:1px solid var(--line);
-      font-size:.82rem;
-      color:var(--muted);
-    }
-    .token-panel{
-      background:rgba(255,255,255,.8);
-      border:1px solid var(--line);
-      border-radius:24px;
-      padding:18px;
-      box-shadow:var(--shadow-soft);
-    }
-    .token-row{
-      display:grid;
-      grid-template-columns:repeat(5, minmax(0, 1fr));
-      gap:10px;
-      margin-top:14px;
-    }
-    .token{
-      border-radius:18px;
-      min-height:88px;
-      padding:14px;
-      border:1px solid var(--line);
-      background:#fff;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-    }
-    .token .swatch{
-      width:100%;
-      height:14px;
-      border-radius:999px;
-    }
-    .token strong{font-size:.85rem}
-    .token small{color:var(--muted)}
-    .token.primary .swatch{background:var(--primary)}
-    .token.emerald .swatch{background:var(--emerald)}
-    .token.amber .swatch{background:var(--amber)}
-    .token.surface .swatch{background:#fff; border:1px solid var(--line)}
-    .token.text .swatch{background:var(--text)}
-    .launchers{
-      display:grid;
-      grid-template-columns:repeat(2, minmax(0, 1fr));
-      gap:18px;
-      margin-top:18px;
-    }
-    .launch{
-      background:rgba(255,255,255,.84);
-      border:1px solid var(--line);
-      border-radius:26px;
-      padding:22px;
-      box-shadow:var(--shadow-soft);
-      overflow:hidden;
-      position:relative;
-      min-height:280px;
-    }
-    .launch h3{
-      font-size:1.16rem;
-      letter-spacing:-.03em;
-      margin-bottom:8px;
-    }
-    .launch p{
-      color:var(--muted);
-      line-height:1.65;
-      margin:0 0 18px;
-      max-width:42ch;
-    }
-    .wire{
-      border-radius:20px;
-      border:1px solid var(--line);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.96), rgba(242,247,252,.86));
-      padding:16px;
-      display:grid;
-      gap:12px;
-    }
-    .wire .row{
-      height:18px;
-      border-radius:999px;
-      background:linear-gradient(90deg, rgba(16,62,118,.12), rgba(16,62,118,.04));
-    }
-    .wire .row.alt{width:78%; background:linear-gradient(90deg, rgba(23,129,109,.22), rgba(23,129,109,.04))}
-    .wire .row.soft{width:62%; background:linear-gradient(90deg, rgba(200,138,23,.22), rgba(200,138,23,.04))}
-    .launch a{
-      margin-top:18px;
-    }
-    .footer{
-      padding:36px 0 44px;
-      color:var(--muted);
-      font-size:.92rem;
-    }
-    .footer .wrap{
-      display:flex;
-      justify-content:space-between;
-      gap:18px;
-      border-top:1px solid rgba(185,201,219,.65);
-      padding-top:18px;
-      flex-wrap:wrap;
-    }
-    .footer strong{color:var(--text)}
-    @media (max-width: 1080px){
-      .hero-grid,
-      .surface-grid,
-      .launchers{grid-template-columns:1fr}
-      .token-row{grid-template-columns:repeat(2, minmax(0, 1fr))}
-      h1{max-width:10ch}
-    }
-    @media (max-width: 760px){
-      .wrap{width:min(100vw - 28px, 1240px)}
-      .topbar .wrap{min-height:70px}
-      .nav{display:none}
-      .hero{padding-top:36px}
-      h1{font-size:clamp(2.9rem, 14vw, 4.6rem)}
-      .hero-points{grid-template-columns:1fr}
-      .step{grid-template-columns:46px 1fr; align-items:start}
-      .step .status{grid-column:2}
-      .step .count{width:46px; height:46px; border-radius:14px}
-      .launch a,.btn{width:100%}
-    }
-    @media (prefers-reduced-motion: reduce){
-      html{scroll-behavior:auto}
-      *,*::before,*::after{animation:none!important; transition:none!important}
-    }
-  </style>
-<style data-od-tweaks-bridge-style>
-[data-od-tweaks-hidden] .tw-panel {
-  transform: translateX(calc(100% + 32px)) !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STITCH — Plataforma de Diseño 3D</title>
+<style>
+/* ============================================================
+   STITCH — 3D Garment Customizer
+   Fuentes: Clash Display + DM Sans
+   Paleta: Negro profundo + Amber dorado + Zinc
+============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg-0: #0a0a0b;
+  --bg-1: #111113;
+  --bg-2: #18181b;
+  --bg-3: #222226;
+  --bg-4: #2c2c32;
+  --border: #2e2e35;
+  --border-hi: #44444f;
+  --text-0: #fafafa;
+  --text-1: #c4c4cc;
+  --text-2: #71717a;
+  --text-3: #52525b;
+  --accent: #f59e0b;
+  --accent-hi: #fbbf24;
+  --accent-dim: #78350f;
+  --accent-glow: rgba(245, 158, 11, 0.15);
+  --red: #ef4444;
+  --green: #22c55e;
+  --blue: #3b82f6;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --sidebar-w: 300px;
+  --topbar-h: 56px;
+  --font-ui: 'DM Sans', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.5);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.6);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.7);
+  --transition: 0.18s cubic-bezier(.4,0,.2,1);
 }
-.tw-restore { display: none !important; }
-</style><script data-od-tweaks-bridge>(function(){
-  // Synchronously hide BEFORE the artifact body parses so the panel never
-  // flashes on initial paint. The host removes the attribute via postMessage
-  // once it knows the desired state.
-  document.documentElement.setAttribute('data-od-tweaks-hidden', '');
 
-  var suppressEcho = false;
-  var observer = null;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  function panelEl(){ return document.querySelector('.tw-panel'); }
+html, body {
+  height: 100%;
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
 
-  function applyClassesToPanel(visible){
-    var panel = panelEl();
-    if (panel) panel.classList.toggle('tw-hidden', !visible);
-  }
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 99px; }
 
-  function setPanelVisible(visible){
-    suppressEcho = true;
-    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !visible);
-    applyClassesToPanel(visible);
-    // Clear flag after the MutationObserver has had a chance to fire for this
-    // change so we don't echo our own host-driven toggles back to the host.
-    Promise.resolve().then(function(){ suppressEcho = false; });
-  }
+/* ── LAYOUT ── */
+#app { display: flex; flex-direction: column; height: 100vh; }
 
-  function postState(){
-    var panel = panelEl();
-    if (!panel) return;
-    try {
-      parent.postMessage({
-        type: 'od:tweaks-panel-state',
-        visible: !panel.classList.contains('tw-hidden'),
-      }, '*');
-    } catch (e) {}
-  }
+/* ── TOPBAR ── */
+#topbar {
+  height: var(--topbar-h);
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 100;
+}
 
-  function postAvailability(){
-    try {
-      parent.postMessage({
-        type: 'od:tweaks-available',
-        available: !!panelEl(),
-      }, '*');
-    } catch (e) {}
-  }
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-0);
+  text-transform: uppercase;
+}
 
-  function attachObserver(){
-    var panel = panelEl();
-    if (!panel || observer) return;
-    observer = new MutationObserver(function(){
-      if (suppressEcho) return;
-      postState();
-    });
-    observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
-  }
+.logo-icon {
+  width: 28px; height: 28px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: grid; place-items: center;
+  font-size: 14px;
+  color: #000;
+}
 
-  function onReady(){
-    // Capture the panel authored visibility BEFORE we apply the host hidden
-    // attribute. The bridge sets data-od-tweaks-hidden synchronously in head
-    // (before the body parses), so on entry to onReady the attribute is
-    // always present even though the artifact may have authored the panel
-    // as default-visible. Reading the panel class first is the only place
-    // we can still observe the author intent. Then drive the attribute,
-    // classes, and posted state from that captured value so a default
-    // visible tw-panel reports visible:true and the toolbar toggle starts
-    // ON. Issue surfaced in PR #1643 review.
-    var panel = panelEl();
-    var initialVisible = !!panel && !panel.classList.contains('tw-hidden');
-    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !initialVisible);
-    applyClassesToPanel(initialVisible);
-    attachObserver();
-    postAvailability();
-    // Post the captured initial visibility so the toolbar toggle reflects
-    // the default state on mount. Without this the toggle reads OFF while
-    // a default-visible tw-panel artifact clearly shows its panel and the
-    // user would have to click toggle-on then toggle-off to actually hide.
-    postState();
-  }
+.top-divider { width: 1px; height: 24px; background: var(--border); }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', onReady);
-  } else {
-    onReady();
-  }
+/* Garment selector tabs */
+.garment-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-2);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
 
-  window.addEventListener('message', function(ev){
-    if (!ev.data || ev.data.type !== 'od:tweaks-panel-visible') return;
-    setPanelVisible(!!ev.data.visible);
-  });
-})();</script></head>
+.garment-tab {
+  padding: 5px 14px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.garment-tab:hover { color: var(--text-0); background: var(--bg-3); }
+.garment-tab.active { background: var(--accent); color: #000; font-weight: 600; }
+
+/* View buttons */
+.view-btns {
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.view-btn {
+  width: 30px; height: 30px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: grid; place-items: center;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  transition: var(--transition);
+  letter-spacing: 0;
+}
+
+.view-btn:hover { border-color: var(--border-hi); color: var(--text-0); background: var(--bg-3); }
+.view-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+/* Export button */
+.btn-export {
+  padding: 7px 16px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-export:hover { background: var(--accent-hi); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,158,11,.4); }
+
+.btn-secondary {
+  padding: 7px 14px;
+  background: var(--bg-3);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-secondary:hover { border-color: var(--border-hi); color: var(--text-0); background: var(--bg-4); }
+
+/* ── MAIN AREA ── */
+#main { display: flex; flex: 1; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg-1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sidebar-tab {
+  flex: 1;
+  padding: 10px 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border-bottom: 2px solid transparent;
+}
+
+.sidebar-tab svg { width: 16px; height: 16px; }
+.sidebar-tab:hover { color: var(--text-0); }
+.sidebar-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.sidebar-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sidebar-panel.active { display: flex; }
+
+/* Section */
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-bottom: 10px;
+}
+
+/* Color swatches */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.color-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: var(--transition);
+  position: relative;
+}
+
+.color-swatch:hover { transform: scale(1.1); z-index: 1; }
+.color-swatch.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+.color-custom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.color-custom label {
+  font-size: 12px;
+  color: var(--text-2);
+  flex: 1;
+}
+
+.color-custom input[type="color"] {
+  width: 36px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-3);
+  cursor: pointer;
+  padding: 2px;
+}
+
+/* Upload zone */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--bg-2);
+}
+
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.upload-zone p { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+.upload-zone .upload-icon { font-size: 24px; margin-bottom: 4px; }
+
+/* Input */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label { font-size: 12px; color: var(--text-2); font-weight: 500; }
+
+.input-text {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-0);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  transition: var(--transition);
+}
+
+.input-text:focus { border-color: var(--accent); background: var(--bg-3); }
+
+select.input-text {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2371717a'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+/* Slider */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider-row label { font-size: 12px; color: var(--text-2); width: 80px; flex-shrink: 0; }
+
+.slider-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  height: 4px;
+  cursor: pointer;
+}
+
+.slider-row .val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-1);
+  width: 32px;
+  text-align: right;
+}
+
+/* Buttons group */
+.btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.btn-sm {
+  padding: 6px 12px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-sm:hover { border-color: var(--border-hi); color: var(--text-0); background: var(--bg-4); }
+.btn-sm.accent { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+.btn-sm.accent:hover { background: var(--accent-hi); }
+.btn-sm.danger { background: rgba(239,68,68,.1); color: var(--red); border-color: rgba(239,68,68,.3); }
+.btn-sm.danger:hover { background: rgba(239,68,68,.2); }
+
+/* History list */
+.history-list { display: flex; flex-direction: column; gap: 8px; }
+
+.history-item {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.history-item:hover { border-color: var(--border-hi); background: var(--bg-3); }
+
+.history-thumb {
+  width: 40px; height: 40px;
+  border-radius: 6px;
+  background: var(--bg-3);
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}
+
+.history-info { flex: 1; min-width: 0; }
+.history-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-time { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+.history-del {
+  width: 24px; height: 24px;
+  display: grid; place-items: center;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-3);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.history-del:hover { color: var(--red); background: rgba(239,68,68,.1); }
+
+/* ── 3D CANVAS AREA ── */
+#canvas-area {
+  flex: 1;
+  position: relative;
+  background: var(--bg-0);
+  overflow: hidden;
+}
+
+#three-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Canvas overlays */
+.canvas-label {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10,10,11,.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.canvas-label span { color: var(--text-0); font-weight: 500; }
+
+.canvas-hint {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(10,10,11,.7);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.hint-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.key {
+  background: var(--bg-3);
+  border: 1px solid var(--border-hi);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-1);
+}
+
+/* Logo transform handles overlay */
+#logo-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  display: none;
+}
+
+/* Status badge */
+.status-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(10,10,11,.8);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Notification toast */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-size: 13px;
+  color: var(--text-0);
+  box-shadow: var(--shadow-lg);
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#toast.success { border-color: rgba(34,197,94,.4); }
+#toast.error { border-color: rgba(239,68,68,.4); }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: none;
+  place-items: center;
+}
+
+.modal-backdrop.open { display: grid; }
+
+.modal {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 440px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-lg);
+  animation: modal-in 0.2s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-title { font-size: 16px; font-weight: 600; }
+
+.modal-close {
+  width: 28px; height: 28px;
+  border: none;
+  background: var(--bg-3);
+  border-radius: 6px;
+  color: var(--text-2);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  transition: var(--transition);
+}
+
+.modal-close:hover { color: var(--text-0); background: var(--bg-4); }
+
+.export-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.export-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.export-option:hover { border-color: var(--accent); background: var(--accent-glow); }
+
+.export-icon {
+  width: 40px; height: 40px;
+  background: var(--bg-3);
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.export-info h4 { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.export-info p { font-size: 11px; color: var(--text-2); }
+
+/* Text preview on canvas */
+#text-canvas-overlay {
+  position: absolute;
+  pointer-events: none;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: none;
+}
+
+/* Logo drag area */
+.logo-drag-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px dashed var(--accent);
+  border-radius: 8px;
+  padding: 8px;
+  display: none;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Separator */
+.sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* Tag */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tag-amber { background: var(--accent-dim); color: var(--accent); }
+.tag-green { background: rgba(34,197,94,.15); color: var(--green); }
+
+/* Scrollable right panel for history */
+#panel-history { gap: 16px; }
+
+/* Checkbox */
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.check-row input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.check-row label {
+  font-size: 12px;
+  color: var(--text-1);
+  cursor: pointer;
+}
+
+/* Loading spinner */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Mobile warning */
+.mobile-warn {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg-0);
+  z-index: 9999;
+  place-items: center;
+  text-align: center;
+  padding: 32px;
+}
+
+@media (max-width: 768px) {
+  .mobile-warn { display: grid; }
+}
+
+.right-panel {
+  width: 240px;
+  background: var(--bg-1);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.right-panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.right-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.design-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: var(--bg-2);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.info-label { font-size: 11px; color: var(--text-3); }
+.info-value { font-size: 12px; color: var(--text-0); font-weight: 500; font-family: var(--font-mono); }
+
+.preview-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-top: 8px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.preview-thumb canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+</style>
+</head>
 <body>
-  <div class="shell" data-od-id="path-0">
-    <header class="topbar" data-od-id="path-0-0">
-      <div class="wrap" data-od-id="path-0-0-0">
-        <a class="brand" href="#inicio" aria-label="TaQ Engine" data-od-id="path-0-0-0-0">
-          <div class="mark" aria-hidden="true"></div>
-          <div>
-            <strong>TaQ Engine</strong>
-            <span>Threat Intelligence, definida como código</span>
-          </div>
-        </a>
-        <nav class="nav" aria-label="Navegación" data-od-id="path-0-0-0-1">
-          <a href="landing.html" data-od-id="path-0-0-0-1-0">Landing</a>
-          <a href="dashboard.html" data-od-id="path-0-0-0-1-1">Dashboard</a>
-          <a href="#sistema" data-od-id="path-0-0-0-1-2">Sistema</a>
-          <a class="cta" href="landing.html" data-od-id="path-0-0-0-1-3">Abrir experiencia</a>
-        </nav>
-      </div>
-    </header>
 
-    <main class="wrap" data-od-id="path-0-1">
-      <section class="hero" id="inicio" data-od-id="path-0-1-0">
-        <div class="hero-grid" data-od-id="path-0-1-0-0">
-          <div>
-            <span class="eyebrow"><b>Identidad visual</b> para infraestructura de inteligencia de amenazas programable</span>
-            <h1 data-od-id="path-0-1-0-0-0-1">Threat Intelligence. Defined as Code.</h1>
-            <p class="lead">
-              Un sistema visual editorial para TaQ Engine: confianza empresarial, jerarquía fuerte y mucho aire para una
-              plataforma que permite definir, versionar, automatizar y auditar flujos de inteligencia.
-            </p>
-            <div class="hero-actions">
-              <a class="btn primary" href="landing.html" data-od-id="path-0-1-0-0-0-3-0">Ver landing</a>
-              <a class="btn secondary" href="dashboard.html" data-od-id="path-0-1-0-0-0-3-1">Ver dashboard autenticado</a>
-            </div>
-            <div class="hero-points">
-              <div class="mini">
-                <strong>Posicionamiento claro</strong>
-                <span>No es OSINT. No es un reemplazo de SIEM. Es un motor programable de ejecución.</span>
-              </div>
-              <div class="mini">
-                <strong>Lenguaje visual</strong>
-                <span>Azul profundo, esmeralda para estado, ámbar para énfasis y superficies slate claras.</span>
-              </div>
-              <div class="mini">
-                <strong>Patrón de producto</strong>
-                <span>Landing narrativa + dashboard operativo, ambas piezas listas para escritorio y móvil.</span>
-              </div>
-            </div>
-          </div>
+<!-- Mobile warning -->
+<div class="mobile-warn">
+  <div>
+    <div style="font-size:48px;margin-bottom:16px">🖥️</div>
+    <h2 style="font-size:20px;margin-bottom:8px">Optimizado para escritorio</h2>
+    <p style="color:var(--text-2);font-size:14px">STITCH está diseñado para resoluciones de pantalla mayores a 768px.<br>Por favor usa una computadora para la mejor experiencia.</p>
+  </div>
+</div>
 
-          <aside class="preview" aria-label="Vista previa del sistema" data-od-id="path-0-1-0-0-1">
-            <div class="preview-header" data-od-id="path-0-1-0-0-1-0">
-              <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
-              <div class="label">Vista previa</div>
-            </div>
-            <div class="preview-body" data-od-id="path-0-1-0-0-1-1">
-              <div class="canvas">
-                <div class="canvas-top">
-                  <div>
-                    <h3 data-od-id="path-0-1-0-0-1-1-0-0-0-0">Playbook en ejecución</h3>
-                    <div style="margin-top:6px;color:var(--muted);font-size:.86rem">Secuencia legible, sin ruido visual.</div>
-                  </div>
-                  <span class="chip">En vivo</span>
-                </div>
-                <div class="lane">
-                  <div class="step">
-                    <div class="count">01</div>
-                    <div>
-                      <strong>Ingesta y normalización</strong>
-                      <span>Conectores, eventos y contexto en una sola capa auditada.</span>
-                    </div>
-                    <div class="status">Estable</div>
-                  </div>
-                  <div class="step">
-                    <div class="count">02</div>
-                    <div>
-                      <strong>Correlación y scoring</strong>
-                      <span>Señales ponderadas con trazabilidad de cada regla aplicada.</span>
-                    </div>
-                    <div class="status">Esmeralda</div>
-                  </div>
-                  <div class="step">
-                    <div class="count">03</div>
-                    <div>
-                      <strong>Decisión y auditoría</strong>
-                      <span>Playbooks versionados con historial y justificación completa.</span>
-                    </div>
-                    <div class="status">Listo</div>
-                  </div>
-                </div>
-              </div>
-              <div class="surface-meta">
-                <span>Tipografía: Inter</span>
-                <span>Layout: editorial</span>
-                <span>Motion: sutil y funcional</span>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </section>
+<!-- App -->
+<div id="app">
 
-      <section class="surface-grid" id="sistema" data-od-id="path-0-1-1">
-        <article class="surface" data-od-id="path-0-1-1-0">
-          <div>
-            <span class="eyebrow"><b>Sistema</b> tokens y reglas</span>
-            <h2 data-od-id="path-0-1-1-0-0-1">Una única gramática visual para todas las superficies.</h2>
-            <p>El mismo lenguaje se aplica al marketing y al producto: jerarquía fuerte, bordes finos, color contenido y módulos listos para operación real.</p>
-          </div>
-          <div class="token-panel" data-od-id="path-0-1-1-0-1">
-            <strong style="display:block;font-size:.95rem">Paleta base</strong>
-            <div class="token-row">
-              <div class="token primary"><span class="swatch"></span><strong>Primario</strong><small>Azul profundo</small></div>
-              <div class="token emerald"><span class="swatch"></span><strong>Secundario</strong><small>Esmeralda</small></div>
-              <div class="token amber"><span class="swatch"></span><strong>Acento</strong><small>Ámbar</small></div>
-              <div class="token surface"><span class="swatch"></span><strong>Superficie</strong><small>Slate claro</small></div>
-              <div class="token text"><span class="swatch"></span><strong>Texto</strong><small>Carbón</small></div>
-            </div>
-          </div>
-        </article>
-
-        <article class="surface" data-od-id="path-0-1-1-1">
-          <div>
-            <span class="eyebrow"><b>Experiencia</b> navegación rápida</span>
-            <h2 data-od-id="path-0-1-1-1-0-1">Dos superficies principales, cada una con su propio trabajo.</h2>
-            <p>El landing cuenta la historia, el dashboard ejecuta la operación. El sistema visual mantiene la misma precisión en ambos contextos.</p>
-          </div>
-          <div class="launchers" data-od-id="path-0-1-1-1-1">
-            <div class="launch">
-              <h3 data-od-id="path-0-1-1-1-1-0-0">Landing page narrativa</h3>
-              <p>Hero, orquestación de playbooks, historias de flujo de investigación, arquitectura, comparativa de planes y cierre con llamada a la acción.</p>
-              <div class="wire" aria-hidden="true">
-                <div class="row"></div>
-                <div class="row alt"></div>
-                <div class="row soft"></div>
-                <div class="row" style="width:86%"></div>
-              </div>
-              <a class="btn primary" href="landing.html" data-od-id="path-0-1-1-1-1-0-3">Abrir landing</a>
-            </div>
-            <div class="launch">
-              <h3 data-od-id="path-0-1-1-1-1-1-0">Dashboard autenticado</h3>
-              <p>Vista general de investigaciones, playbooks, conectores, puntuación, auditoría y consumo con una densidad de información controlada.</p>
-              <div class="wire" aria-hidden="true">
-                <div class="row" style="width:92%"></div>
-                <div class="row alt" style="width:74%"></div>
-                <div class="row soft" style="width:66%"></div>
-                <div class="row" style="width:88%"></div>
-              </div>
-              <a class="btn secondary" href="dashboard.html" data-od-id="path-0-1-1-1-1-1-3">Abrir dashboard</a>
-            </div>
-          </div>
-        </article>
-      </section>
-    </main>
-
-    <footer class="footer" data-od-id="path-0-2">
-      <div class="wrap" data-od-id="path-0-2-0">
-        <div><strong>TaQ Engine</strong> · Infraestructura programable para inteligencia de amenazas.</div>
-        <div>Landing + dashboard · responsive desktop y móvil · motion funcional</div>
-      </div>
-    </footer>
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="logo">
+      <div class="logo-icon">✦</div>
+      STITCH
+    </div>
+    <div class="top-divider"></div>
+    <div class="garment-tabs">
+      <button class="garment-tab active" data-garment="cap" onclick="setGarment('cap')">
+        🧢 Gorra
+      </button>
+      <button class="garment-tab" data-garment="tshirt" onclick="setGarment('tshirt')">
+        👕 Playera
+      </button>
+      <button class="garment-tab" data-garment="hoodie" onclick="setGarment('hoodie')">
+        🧥 Hoodie
+      </button>
+    </div>
+    <div class="top-divider"></div>
+    <div class="view-btns">
+      <button class="view-btn active" id="view-front" onclick="setView('front')" title="Vista frontal">F</button>
+      <button class="view-btn" id="view-side" onclick="setView('side')" title="Vista lateral">L</button>
+      <button class="view-btn" id="view-back" onclick="setView('back')" title="Vista trasera">T</button>
+      <button class="view-btn" id="view-360" onclick="toggle360()" title="Rotación automática">↺</button>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+      <button class="btn-secondary" onclick="saveDesign()">
+        <span>💾</span> Guardar
+      </button>
+      <button class="btn-export" onclick="openExportModal()">
+        <span>📦</span> Exportar
+      </button>
+    </div>
   </div>
 
+  <!-- MAIN -->
+  <div id="main">
 
-<script data-od-snapshot-bridge>(function(){
-  var SNAPSHOT_STYLE_PROPS = [
-    'display','position','box-sizing','width','height','min-width','max-width','min-height','max-height',
-    'margin','margin-top','margin-right','margin-bottom','margin-left',
-    'padding','padding-top','padding-right','padding-bottom','padding-left',
-    'border','border-top','border-right','border-bottom','border-left','border-radius',
-    'font','font-family','font-size','font-weight','font-style','line-height','letter-spacing',
-    'color','background-color','opacity','transform','transform-origin','overflow','overflow-x','overflow-y',
-    'white-space','text-align','vertical-align','object-fit','object-position',
-    'flex','flex-direction','flex-wrap','flex-grow','flex-shrink','flex-basis',
-    'grid','grid-template-columns','grid-template-rows','grid-column','grid-row',
-    'gap','row-gap','column-gap','align-items','align-content','align-self',
-    'justify-items','justify-content','justify-self','inset','top','right','bottom','left',
-    'z-index','box-shadow','text-shadow'
-  ];
-  function copyComputedStyle(source, target){
-    if (!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
-    var computed = window.getComputedStyle(source);
-    var style = target.getAttribute('style') || '';
-    for (var i = 0; i < SNAPSHOT_STYLE_PROPS.length; i++){
-      var prop = SNAPSHOT_STYLE_PROPS[i];
-      var value = computed.getPropertyValue(prop);
-      if (value) style += prop + ':' + value + ';';
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" onclick="showPanel('color')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+          Color
+        </button>
+        <button class="sidebar-tab" onclick="showPanel('logo')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+          Logo
+        </button>
+        <button class="sidebar-tab" onclick="showPanel('text')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+          Texto
+        </button>
+        <button class="sidebar-tab" onclick="showPanel('history')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+          Historial
+        </button>
+      </div>
+
+      <!-- Panel: Color -->
+      <div id="panel-color" class="sidebar-panel active">
+        <div>
+          <div class="section-title">Color de prenda</div>
+          <div class="color-grid" id="swatch-grid"></div>
+          <div class="color-custom" style="margin-top:10px">
+            <label>Color personalizado</label>
+            <input type="color" id="custom-color" value="#ffffff" onchange="applyCustomColor(this.value)">
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div>
+          <div class="section-title">Material</div>
+          <div class="btn-group">
+            <button class="btn-sm active" id="mat-matte" onclick="setMaterial('matte')">Mate</button>
+            <button class="btn-sm" id="mat-glossy" onclick="setMaterial('glossy')">Brillante</button>
+            <button class="btn-sm" id="mat-fabric" onclick="setMaterial('fabric')">Tela</button>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div>
+          <div class="section-title">Iluminación</div>
+          <div class="slider-row">
+            <label>Brillo</label>
+            <input type="range" min="0" max="100" value="60" oninput="setLightIntensity(this.value); this.nextElementSibling.textContent=this.value+'%'">
+            <span class="val">60%</span>
+          </div>
+          <div class="slider-row" style="margin-top:8px">
+            <label>Ambiente</label>
+            <input type="range" min="0" max="100" value="40" oninput="setAmbientLight(this.value); this.nextElementSibling.textContent=this.value+'%'">
+            <span class="val">40%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Logo -->
+      <div id="panel-logo" class="sidebar-panel">
+        <div>
+          <div class="section-title">Subir logo</div>
+          <div class="upload-zone" id="upload-zone" onclick="document.getElementById('logo-input').click()"
+               ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="this.classList.remove('drag-over')">
+            <div class="upload-icon">🖼️</div>
+            <p>Arrastra un PNG aquí<br>o haz clic para seleccionar</p>
+          </div>
+          <input type="file" id="logo-input" accept="image/*" style="display:none" onchange="loadLogo(event)">
+        </div>
+        <div id="logo-controls" style="display:none">
+          <div class="sep"></div>
+          <div class="section-title">Posición del logo</div>
+          <div class="slider-row">
+            <label>Escala</label>
+            <input type="range" min="5" max="100" value="30" id="logo-scale" oninput="updateLogo(); this.nextElementSibling.textContent=this.value+'%'">
+            <span class="val">30%</span>
+          </div>
+          <div class="slider-row" style="margin-top:8px">
+            <label>Pos. X</label>
+            <input type="range" min="-100" max="100" value="0" id="logo-x" oninput="updateLogo(); this.nextElementSibling.textContent=this.value">
+            <span class="val">0</span>
+          </div>
+          <div class="slider-row" style="margin-top:8px">
+            <label>Pos. Y</label>
+            <input type="range" min="-100" max="100" value="0" id="logo-y" oninput="updateLogo(); this.nextElementSibling.textContent=this.value">
+            <span class="val">0</span>
+          </div>
+          <div class="slider-row" style="margin-top:8px">
+            <label>Rotación</label>
+            <input type="range" min="-180" max="180" value="0" id="logo-rot" oninput="updateLogo(); this.nextElementSibling.textContent=this.value+'°'">
+            <span class="val">0°</span>
+          </div>
+          <div class="slider-row" style="margin-top:8px">
+            <label>Opacidad</label>
+            <input type="range" min="10" max="100" value="100" id="logo-opacity" oninput="updateLogo(); this.nextElementSibling.textContent=this.value+'%'">
+            <span class="val">100%</span>
+          </div>
+          <div class="sep"></div>
+          <div class="btn-group">
+            <button class="btn-sm danger" onclick="removeLogo()">🗑 Eliminar logo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Texto -->
+      <div id="panel-text" class="sidebar-panel">
+        <div class="field">
+          <label>Texto en prenda</label>
+          <input type="text" class="input-text" id="text-input" placeholder="Escribe aquí..." maxlength="24" oninput="updateText()">
+        </div>
+        <div class="field">
+          <label>Fuente</label>
+          <select class="input-text" id="text-font" onchange="updateText()">
+            <option value="'Arial', sans-serif">Arial</option>
+            <option value="'Georgia', serif">Georgia</option>
+            <option value="'Courier New', monospace">Courier New</option>
+            <option value="Impact, sans-serif">Impact</option>
+            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+            <option value="'Brush Script MT', cursive">Script</option>
+          </select>
+        </div>
+        <div class="slider-row">
+          <label>Tamaño</label>
+          <input type="range" min="12" max="120" value="48" id="text-size" oninput="updateText(); this.nextElementSibling.textContent=this.value+'px'">
+          <span class="val">48px</span>
+        </div>
+        <div class="field">
+          <label>Color de texto</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="color" id="text-color" value="#ffffff" onchange="updateText()" style="width:40px;height:32px;border:1px solid var(--border);border-radius:6px;background:var(--bg-3);cursor:pointer;padding:2px">
+            <input type="text" class="input-text" id="text-color-hex" value="#ffffff" style="flex:1" oninput="syncTextColor(this.value)">
+          </div>
+        </div>
+        <div class="slider-row">
+          <label>Pos. X</label>
+          <input type="range" min="-100" max="100" value="0" id="text-x" oninput="updateText(); this.nextElementSibling.textContent=this.value">
+          <span class="val">0</span>
+        </div>
+        <div class="slider-row">
+          <label>Pos. Y</label>
+          <input type="range" min="-100" max="100" value="0" id="text-y" oninput="updateText(); this.nextElementSibling.textContent=this.value">
+          <span class="val">0</span>
+        </div>
+        <div class="slider-row">
+          <label>Rotación</label>
+          <input type="range" min="-180" max="180" value="0" id="text-rot" oninput="updateText(); this.nextElementSibling.textContent=this.value+'°'">
+          <span class="val">0°</span>
+        </div>
+        <div class="sep"></div>
+        <div class="btn-group">
+          <button class="btn-sm danger" onclick="clearText()">🗑 Eliminar texto</button>
+        </div>
+      </div>
+
+      <!-- Panel: Historial -->
+      <div id="panel-history" class="sidebar-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="section-title" style="margin:0">Diseños guardados</div>
+          <button class="btn-sm danger" onclick="clearAllHistory()" style="font-size:11px">Limpiar todo</button>
+        </div>
+        <div id="history-list" class="history-list">
+          <div style="text-align:center;padding:24px;color:var(--text-3);font-size:12px">
+            No hay diseños guardados.<br>Usa el botón "Guardar" para empezar.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+
+    <!-- 3D CANVAS AREA -->
+    <div id="canvas-area">
+      <canvas id="three-canvas"></canvas>
+
+      <!-- Status -->
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        VISOR 3D ACTIVO
+      </div>
+
+      <!-- Hint -->
+      <div class="canvas-hint">
+        <div class="hint-row"><span class="key">Arrastrar</span> Rotar</div>
+        <div class="hint-row"><span class="key">Scroll</span> Zoom</div>
+        <div class="hint-row"><span class="key">Clic derecho</span> Mover</div>
+        <div class="hint-row"><span class="key">F/L/T</span> Vistas</div>
+      </div>
+
+      <!-- View label -->
+      <div class="canvas-label">
+        Vista: <span id="current-view-label">Frontal</span>
+        &nbsp;·&nbsp; Prenda: <span id="current-garment-label">Gorra</span>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+      <div class="right-panel-header">Resumen del diseño</div>
+      <div class="right-panel-body">
+        <div class="design-info-grid">
+          <div class="info-row">
+            <span class="info-label">Prenda</span>
+            <span class="info-value" id="info-garment">Gorra</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Color</span>
+            <span class="info-value" id="info-color" style="display:flex;align-items:center;gap:6px">
+              <span id="info-color-dot" style="width:10px;height:10px;border-radius:50%;background:#ffffff;border:1px solid var(--border)"></span>
+              <span id="info-color-hex">#ffffff</span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Material</span>
+            <span class="info-value" id="info-material">Mate</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Logo</span>
+            <span class="info-value" id="info-logo">Ninguno</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Texto</span>
+            <span class="info-value" id="info-text" style="font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span>
+          </div>
+        </div>
+
+        <div class="sep" style="margin:14px 0"></div>
+        <div class="section-title">Vista previa rápida</div>
+        <div class="preview-thumb" id="preview-thumb">
+          <div style="color:var(--text-3);font-size:11px">Renderizando...</div>
+        </div>
+
+        <div class="sep" style="margin:14px 0"></div>
+        <div class="section-title">Acciones rápidas</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="btn-sm" onclick="exportPNG('front')">📸 Exportar PNG frontal</button>
+          <button class="btn-sm" onclick="exportPNG('back')">📸 Exportar PNG trasero</button>
+          <button class="btn-sm" onclick="exportJSON()">📄 Exportar config JSON</button>
+          <button class="btn-sm accent" onclick="openExportModal()">📦 Pack proveedor</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Export Modal -->
+<div class="modal-backdrop" id="export-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📦 Exportar para proveedor</div>
+      <button class="modal-close" onclick="closeExportModal()">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-2);margin-bottom:16px">
+      Descarga todos los archivos necesarios para tu proveedor de impresión.
+    </p>
+    <div class="export-options">
+      <div class="export-option" onclick="exportPNG('front')">
+        <div class="export-icon">🖼️</div>
+        <div class="export-info">
+          <h4>Vista frontal PNG</h4>
+          <p>Render de alta calidad — vista delantera</p>
+        </div>
+      </div>
+      <div class="export-option" onclick="exportPNG('back')">
+        <div class="export-icon">🖼️</div>
+        <div class="export-info">
+          <h4>Vista trasera PNG</h4>
+          <p>Render de alta calidad — vista posterior</p>
+        </div>
+      </div>
+      <div class="export-option" onclick="exportPNG('side')">
+        <div class="export-icon">🖼️</div>
+        <div class="export-info">
+          <h4>Vista lateral PNG</h4>
+          <p>Render de alta calidad — vista lateral</p>
+        </div>
+      </div>
+      <div class="export-option" onclick="exportJSON()">
+        <div class="export-icon">📄</div>
+        <div class="export-info">
+          <h4>Configuración JSON</h4>
+          <p>Datos del diseño para producción</p>
+        </div>
+      </div>
+      <div class="export-option" onclick="exportAll()">
+        <div class="export-icon">📦</div>
+        <div class="export-info">
+          <h4>Exportar todo</h4>
+          <p>Descarga todos los archivos en secuencia</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Three.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+/* ============================================================
+   STITCH — 3D Garment Customizer
+   Engine: Three.js r128 (CDN)
+   No backend, no React, no Node.js
+   Todo local — abre con doble clic
+============================================================ */
+
+'use strict';
+
+// ── ESTADO GLOBAL ──────────────────────────────────────────
+const STATE = {
+  garment: 'cap',         // cap | tshirt | hoodie
+  color: '#ffffff',
+  material: 'matte',
+  view: 'front',
+  autoRotate: false,
+  logo: null,             // { img, scale, x, y, rot, opacity }
+  text: {
+    content: '',
+    font: "'Arial', sans-serif",
+    size: 48,
+    color: '#ffffff',
+    x: 0, y: 0, rot: 0
+  },
+  lightIntensity: 0.6,
+  ambientLight: 0.4,
+  history: JSON.parse(localStorage.getItem('stitch_history') || '[]')
+};
+
+// ── THREE.JS SETUP ──────────────────────────────────────────
+let scene, camera, renderer, controls;
+let garmentMesh = null;
+let decalCanvas, decalCtx, decalTexture;
+let animFrame = null;
+let isDragging = false, prevMouse = { x: 0, y: 0 };
+let spherical = { theta: 0, phi: Math.PI / 2 };
+let sphericalTarget = { theta: 0, phi: Math.PI / 2 };
+let radius = 3.2, radiusTarget = 3.2;
+let panOffset = { x: 0, y: 0 }, panTarget = { x: 0, y: 0 };
+let mouseBtn = -1;
+
+function initThree() {
+  const canvas = document.getElementById('three-canvas');
+  const container = document.getElementById('canvas-area');
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0d0d0f);
+  scene.fog = new THREE.FogExp2(0x0d0d0f, 0.05);
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+  camera.position.set(0, 0.5, 3.2);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0xffffff, STATE.ambientLight * 3);
+  ambientLight.name = 'ambient';
+  scene.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xfff5e0, STATE.lightIntensity * 2.5);
+  dirLight.name = 'dirlight';
+  dirLight.position.set(3, 5, 3);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.width = 2048;
+  dirLight.shadow.mapSize.height = 2048;
+  scene.add(dirLight);
+
+  const fillLight = new THREE.DirectionalLight(0xe0f0ff, 0.4);
+  fillLight.position.set(-3, 2, -1);
+  scene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
+  rimLight.position.set(0, -2, -3);
+  scene.add(rimLight);
+
+  // Grid floor
+  const grid = new THREE.GridHelper(10, 20, 0x222226, 0x222226);
+  grid.position.y = -1.5;
+  scene.add(grid);
+
+  // Decal texture canvas
+  decalCanvas = document.createElement('canvas');
+  decalCanvas.width = 1024;
+  decalCanvas.height = 1024;
+  decalCtx = decalCanvas.getContext('2d');
+  decalTexture = new THREE.CanvasTexture(decalCanvas);
+
+  // Build initial garment
+  buildGarment('cap');
+
+  // Events
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('mouseup', onMouseUp);
+  canvas.addEventListener('wheel', onWheel, { passive: false });
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  window.addEventListener('resize', onResize);
+
+  // Start render loop
+  animate();
+}
+
+// ── GARMENT BUILDERS ───────────────────────────────────────
+
+function buildGarment(type) {
+  // Remove old
+  if (garmentMesh) {
+    if (Array.isArray(garmentMesh)) {
+      garmentMesh.forEach(m => scene.remove(m));
+    } else {
+      scene.remove(garmentMesh);
     }
-    target.setAttribute('style', style);
+    garmentMesh = null;
   }
-  function syncElementState(source, target){
-    var tag = source.tagName ? source.tagName.toLowerCase() : '';
-    if (tag === 'img' && source.currentSrc) target.setAttribute('src', source.currentSrc);
-    if (tag === 'input' || tag === 'textarea') target.setAttribute('value', source.value || '');
-    if (tag === 'canvas') {
-      try {
-        var img = document.createElement('img');
-        img.setAttribute('src', source.toDataURL('image/png'));
-        img.setAttribute('style', target.getAttribute('style') || '');
-        target.parentNode && target.parentNode.replaceChild(img, target);
-      } catch (_) {}
-    }
+
+  if (type === 'cap') buildCap();
+  else if (type === 'tshirt') buildTshirt();
+  else if (type === 'hoodie') buildHoodie();
+
+  updateDecal();
+}
+
+function getMaterial(color) {
+  const c = new THREE.Color(color);
+  const baseProps = { color: c, map: decalTexture };
+
+  if (STATE.material === 'glossy') {
+    return new THREE.MeshStandardMaterial({
+      ...baseProps, roughness: 0.1, metalness: 0.05
+    });
+  } else if (STATE.material === 'fabric') {
+    return new THREE.MeshStandardMaterial({
+      ...baseProps, roughness: 0.95, metalness: 0
+    });
   }
-  function inlineSnapshotStyles(originalRoot, cloneRoot){
-    copyComputedStyle(originalRoot, cloneRoot);
-    syncElementState(originalRoot, cloneRoot);
-    var originals = originalRoot.querySelectorAll('*');
-    var clones = cloneRoot.querySelectorAll('*');
-    var count = Math.min(originals.length, clones.length, 3500);
-    for (var i = 0; i < count; i++){
-      copyComputedStyle(originals[i], clones[i]);
-      syncElementState(originals[i], clones[i]);
-    }
-    var scripts = cloneRoot.querySelectorAll('script');
-    for (var s = scripts.length - 1; s >= 0; s--) scripts[s].remove();
-    var links = cloneRoot.querySelectorAll('link[rel~="stylesheet"], link[rel~="preload"], link[rel~="preconnect"]');
-    for (var l = links.length - 1; l >= 0; l--) links[l].remove();
-    var styles = cloneRoot.querySelectorAll('style');
-    for (var st = 0; st < styles.length; st++) {
-      styles[st].textContent = (styles[st].textContent || '')
-        .replace(/@import[^;]+;/gi, '')
-        .replace(/@font-face\s*\{[^}]*\}/gi, '');
-    }
-  }
-  function pruneHiddenSnapshotNodes(originalRoot, cloneRoot){
-    var originals = originalRoot.querySelectorAll('*');
-    var clones = cloneRoot.querySelectorAll('*');
-    var count = Math.min(originals.length, clones.length);
-    var removals = [];
-    for (var i = 0; i < count; i++){
-      var original = originals[i];
-      var clone = clones[i];
-      if (!original || !clone || !clone.parentNode) continue;
-      var computed = window.getComputedStyle(original);
-      if (computed && (computed.display === 'none' || computed.visibility === 'hidden')) {
-        removals.push(clone);
-      }
-    }
-    for (var r = removals.length - 1; r >= 0; r--){
-      if (removals[r].parentNode) removals[r].parentNode.removeChild(removals[r]);
-    }
-  }
-  function waitForImages(){
-    var imgs = Array.prototype.slice.call(document.images || []);
-    return Promise.all(imgs.map(function(img){
-      if (img.complete) return Promise.resolve();
-      return new Promise(function(resolve){
-        img.addEventListener('load', resolve, { once: true });
-        img.addEventListener('error', resolve, { once: true });
-      });
-    }));
-  }
-  function scrollOffset(){
-    var doc = document.documentElement;
-    var body = document.body;
-    return {
-      x: Math.max(window.scrollX || 0, doc ? doc.scrollLeft || 0 : 0, body ? body.scrollLeft || 0 : 0),
-      y: Math.max(window.scrollY || 0, doc ? doc.scrollTop || 0 : 0, body ? body.scrollTop || 0 : 0)
-    };
-  }
-  function escapeAttribute(value){
-    return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-  }
-  function snapshotBackgroundColor(){
-    try {
-      var probe = window.getComputedStyle(document.body || document.documentElement);
-      var bg = probe && probe.backgroundColor || '';
-      if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') return '#ffffff';
-      return bg;
-    } catch (_) { return '#ffffff'; }
-  }
-  // After painting, sample the canvas: a uniform (single-color) bitmap means
-  // the foreignObject rasterizer painted nothing — Chromium frequently refuses
-  // to paint <foreignObject> HTML loaded via <img>. Treating that as an honest
-  // 'empty-render' error (instead of shipping the background-only frame) lets
-  // the host fall back / surface a real failure rather than a silent black PNG.
-  function canvasLooksBlank(ctx, cw, ch){
-    try {
-      var data = ctx.getImageData(0, 0, cw, ch).data;
-      var step = Math.max(4, Math.floor((cw * ch) / 4096)) * 4;
-      var first = null, samples = 0;
-      for (var i = 0; i + 3 < data.length; i += step){
-        samples++;
-        if (!first){ first = [data[i], data[i+1], data[i+2], data[i+3]]; continue; }
-        if (Math.abs(data[i]-first[0]) > 6 || Math.abs(data[i+1]-first[1]) > 6 ||
-            Math.abs(data[i+2]-first[2]) > 6 || Math.abs(data[i+3]-first[3]) > 6) return false;
-      }
-      return samples > 8;
-    } catch (_) { return false; }
-  }
-  function renderSnapshot(id){
-    var w = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
-    var h = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
-    var dpr = window.devicePixelRatio || 1;
-    var bgColor = snapshotBackgroundColor();
-    var docW = Math.max(w, document.documentElement.scrollWidth || 0, document.body ? document.body.scrollWidth : 0);
-    var docH = Math.max(h, document.documentElement.scrollHeight || 0, document.body ? document.body.scrollHeight : 0);
-    var clone = document.documentElement.cloneNode(true);
-    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-    inlineSnapshotStyles(document.documentElement, clone);
-    pruneHiddenSnapshotNodes(document.documentElement, clone);
-    var scroll = scrollOffset();
-    var cloneBody = clone.querySelector('body');
-    var rootStyle = clone.getAttribute('style') || '';
-    var bodyStyle = cloneBody ? cloneBody.getAttribute('style') || '' : '';
-    var bodyContent = cloneBody ? cloneBody.innerHTML : clone.innerHTML;
-    var wrapperStyle = rootStyle + bodyStyle +
-      'margin:0;position:relative;left:' + (-scroll.x) + 'px;top:' + (-scroll.y) + 'px;' +
-      'width:' + docW + 'px;height:' + docH + 'px;overflow:visible;';
-    var html = '<div xmlns="http://www.w3.org/1999/xhtml" style="' + escapeAttribute(wrapperStyle) + '">' + bodyContent + '</div>';
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
-      '<foreignObject x="0" y="0" width="' + docW + '" height="' + docH + '">' +
-      html +
-      '</foreignObject></svg>';
-    var img = new Image();
-    img.onload = function(){
-      try {
-        var canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.floor(w * dpr));
-        canvas.height = Math.max(1, Math.floor(h * dpr));
-        var ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('no 2d context');
-        ctx.scale(dpr, dpr);
-        // Opaque base so a transparent (un-painted) raster never flattens to
-        // pure black in clipboards / PNG viewers.
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
-        if (canvasLooksBlank(ctx, canvas.width, canvas.height)) {
-          window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: 'empty-render' }, '*');
-          return;
-        }
-        window.parent.postMessage({ type: 'od:snapshot:result', id: id, dataUrl: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }, '*');
-      } catch (err) {
-        window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: String(err && err.message || err) }, '*');
-      }
-    };
-    function encodedSvgDataUrl(){
-      var encoded = encodeURIComponent(svg);
-      return 'data:image/svg+xml;charset=utf-8,' + encoded;
-    }
-    img.onerror = function(){
-      window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: 'snapshot image failed' }, '*');
-    };
-    img.src = encodedSvgDataUrl();
-  }
-  window.addEventListener('message', function(ev){
-    var data = ev && ev.data;
-    if (!data || data.type !== 'od:snapshot' || !data.id) return;
-    waitForImages().then(function(){ renderSnapshot(String(data.id)); });
+  // matte (default)
+  return new THREE.MeshStandardMaterial({
+    ...baseProps, roughness: 0.8, metalness: 0
   });
-})();</script><script data-od-srcdoc-transport-activation>(function(){
-  window.addEventListener('message', function(ev){
-    var data = ev && ev.data;
-    if (!data || data.type !== 'od:srcdoc-transport-activate' || typeof data.html !== 'string') return;
-    document.open();
-    document.write(data.html);
-    document.close();
+}
+
+function buildCap() {
+  const group = new THREE.Group();
+
+  // Brim (visor)
+  const brimGeo = new THREE.CylinderGeometry(0.85, 0.85, 0.06, 64, 1, false, -Math.PI * 0.1, Math.PI * 1.2);
+  brimGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, -0.18, 0.2));
+  const brimMat = getMaterial(STATE.color);
+  const brim = new THREE.Mesh(brimGeo, brimMat);
+  brim.receiveShadow = true; brim.castShadow = true;
+  group.add(brim);
+
+  // Brim flat underside
+  const brimFlatGeo = new THREE.CylinderGeometry(0.85, 0.85, 0.015, 64, 1, false, -Math.PI * 0.1, Math.PI * 1.2);
+  brimFlatGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, -0.21, 0.2));
+  const brimFlat = new THREE.Mesh(brimFlatGeo, new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 }));
+  group.add(brimFlat);
+
+  // Crown panels (main dome)
+  const crownGeo = new THREE.SphereGeometry(0.9, 64, 32, 0, Math.PI * 2, 0, Math.PI * 0.6);
+  crownGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, -0.05, 0));
+  const crown = new THREE.Mesh(crownGeo, getMaterial(STATE.color));
+  crown.receiveShadow = true; crown.castShadow = true;
+  group.add(crown);
+
+  // Sweatband ring
+  const bandGeo = new THREE.TorusGeometry(0.78, 0.05, 8, 64, Math.PI * 2);
+  bandGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, -0.52, 0));
+  const band = new THREE.Mesh(bandGeo, new THREE.MeshStandardMaterial({ color: new THREE.Color(STATE.color).multiplyScalar(0.85), roughness: 0.9 }));
+  group.add(band);
+
+  // Button on top
+  const btnGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.08, 16);
+  btnGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0.49, 0));
+  const btn = new THREE.Mesh(btnGeo, new THREE.MeshStandardMaterial({ color: new THREE.Color(STATE.color).multiplyScalar(0.7), roughness: 0.5 }));
+  group.add(btn);
+
+  // Seam lines (decorative)
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2;
+    const seamGeo = new THREE.TubeGeometry(
+      new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(Math.sin(angle) * 0.05, -0.05, Math.cos(angle) * 0.05),
+        new THREE.Vector3(Math.sin(angle) * 0.55, 0.35, Math.cos(angle) * 0.55),
+        new THREE.Vector3(0, 0.49, 0)
+      ), 20, 0.005, 4
+    );
+    const seam = new THREE.Mesh(seamGeo, new THREE.MeshStandardMaterial({ color: new THREE.Color(STATE.color).multiplyScalar(0.6), roughness: 0.9 }));
+    group.add(seam);
+  }
+
+  group.position.y = 0.2;
+  scene.add(group);
+  garmentMesh = group;
+}
+
+function buildTshirt() {
+  const group = new THREE.Group();
+  const mat = getMaterial(STATE.color);
+  const darkMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(STATE.color).multiplyScalar(0.75), roughness: 0.9 });
+
+  // Torso (main body)
+  const torsoGeo = new THREE.BoxGeometry(1.8, 2.2, 0.35, 4, 8, 2);
+  // Taper top slightly
+  const torsoPos = torsoGeo.attributes.position;
+  for (let i = 0; i < torsoPos.count; i++) {
+    const y = torsoPos.getY(i);
+    if (y > 0.7) {
+      const taper = (y - 0.7) / 0.4;
+      torsoPos.setX(i, torsoPos.getX(i) * (1 - taper * 0.18));
+    }
+  }
+  torsoPos.needsUpdate = true;
+  const torso = new THREE.Mesh(torsoGeo, mat);
+  torso.castShadow = true; torso.receiveShadow = true;
+  group.add(torso);
+
+  // Collar
+  const collarGeo = new THREE.TorusGeometry(0.35, 0.05, 8, 32, Math.PI * 2);
+  collarGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 1.15, 0).multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2)));
+  const collar = new THREE.Mesh(collarGeo, darkMat);
+  group.add(collar);
+
+  // Left sleeve
+  const sleeveLGeo = new THREE.CylinderGeometry(0.32, 0.25, 0.9, 24, 2);
+  sleeveLGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(-1.18, 0.65, 0).multiply(new THREE.Matrix4().makeRotationZ(Math.PI * 0.38)));
+  const sleeveL = new THREE.Mesh(sleeveLGeo, mat);
+  sleeveL.castShadow = true;
+  group.add(sleeveL);
+
+  // Right sleeve
+  const sleeveRGeo = new THREE.CylinderGeometry(0.32, 0.25, 0.9, 24, 2);
+  sleeveRGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(1.18, 0.65, 0).multiply(new THREE.Matrix4().makeRotationZ(-Math.PI * 0.38)));
+  const sleeveR = new THREE.Mesh(sleeveRGeo, mat);
+  sleeveR.castShadow = true;
+  group.add(sleeveR);
+
+  // Hem
+  const hemGeo = new THREE.CylinderGeometry(0.92, 0.9, 0.07, 48);
+  hemGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, -1.1, 0));
+  const hem = new THREE.Mesh(hemGeo, darkMat);
+  group.add(hem);
+
+  group.position.y = -0.15;
+  scene.add(group);
+  garmentMesh = group;
+}
+
+function buildHoodie() {
+  const group = new THREE.Group();
+  const mat = getMaterial(STATE.color);
+  const darkMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(STATE.color).multiplyScalar(0.65), roughness: 0.95 });
+  const trim = new THREE.MeshStandardMaterial({ color: new THREE.Color(STATE.color).multiplyScalar(0.55), roughness: 0.95 });
+
+  // Main body — thicker than tshirt
+  const bodyGeo = new THREE.BoxGeometry(2.0, 2.3, 0.5, 4, 8, 2);
+  const bodyPos = bodyGeo.attributes.position;
+  for (let i = 0; i < bodyPos.count; i++) {
+    const y = bodyPos.getY(i);
+    if (y > 0.8) {
+      const taper = (y - 0.8) / 0.35;
+      bodyPos.setX(i, bodyPos.getX(i) * (1 - taper * 0.2));
+    }
+  }
+  bodyPos.needsUpdate = true;
+  const body = new THREE.Mesh(bodyGeo, mat);
+  body.castShadow = true; body.receiveShadow = true;
+  group.add(body);
+
+  // Hood
+  const hoodGeo = new THREE.SphereGeometry(0.72, 32, 24, 0, Math.PI * 2, 0, Math.PI * 0.62);
+  hoodGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 1.05, -0.1));
+  const hood = new THREE.Mesh(hoodGeo, darkMat);
+  hood.castShadow = true;
+  group.add(hood);
+
+  // Hood opening rim
+  const hoodRimGeo = new THREE.TorusGeometry(0.45, 0.055, 8, 32, Math.PI * 1.3);
+  hoodRimGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 1.15, 0.38).multiply(new THREE.Matrix4().makeRotationX(-0.3)));
+  const hoodRim = new THREE.Mesh(hoodRimGeo, trim);
+  group.add(hoodRim);
+
+  // Sleeves (longer, puffier)
+  const sleeveLGeo = new THREE.CylinderGeometry(0.38, 0.28, 1.35, 24, 2);
+  sleeveLGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(-1.32, 0.5, 0).multiply(new THREE.Matrix4().makeRotationZ(Math.PI * 0.38)));
+  const sleeveL = new THREE.Mesh(sleeveLGeo, mat);
+  sleeveL.castShadow = true;
+  group.add(sleeveL);
+
+  const sleeveRGeo = new THREE.CylinderGeometry(0.38, 0.28, 1.35, 24, 2);
+  sleeveRGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(1.32, 0.5, 0).multiply(new THREE.Matrix4().makeRotationZ(-Math.PI * 0.38)));
+  const sleeveR = new THREE.Mesh(sleeveRGeo, mat);
+  sleeveR.castShadow = true;
+  group.add(sleeveR);
+
+  // Ribbed cuffs
+  [-1.85, 1.85].forEach(tx => {
+    const cuffGeo = new THREE.CylinderGeometry(0.26, 0.24, 0.18, 24);
+    cuffGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(tx, -0.14, 0).multiply(new THREE.Matrix4().makeRotationZ(tx > 0 ? -Math.PI * 0.38 : Math.PI * 0.38)));
+    group.add(new THREE.Mesh(cuffGeo, trim));
   });
-})();</script></body></html>
+
+  // Ribbed waistband
+  const waistGeo = new THREE.BoxGeometry(2.05, 0.2, 0.52);
+  waistGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, -1.25, 0));
+  group.add(new THREE.Mesh(waistGeo, trim));
+
+  // Center zipper track
+  const zipGeo = new THREE.BoxGeometry(0.06, 1.8, 0.26);
+  zipGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0.1, 0.25));
+  group.add(new THREE.Mesh(zipGeo, new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.3, metalness: 0.6 })));
+
+  // Front pouch pocket
+  const pocketGeo = new THREE.BoxGeometry(1.1, 0.45, 0.22);
+  pocketGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(0, -0.65, 0.35));
+  group.add(new THREE.Mesh(pocketGeo, darkMat));
+
+  group.position.y = -0.1;
+  scene.add(group);
+  garmentMesh = group;
+}
+
+// ── DECAL / TEXTURE SYSTEM ──────────────────────────────────
+
+function updateDecal() {
+  const w = decalCanvas.width, h = decalCanvas.height;
+  decalCtx.clearRect(0, 0, w, h);
+
+  // Logo
+  if (STATE.logo) {
+    const { img, scale, x, y, rot, opacity } = STATE.logo;
+    const size = (scale / 100) * w * 0.6;
+    const cx = w / 2 + (x / 100) * w * 0.4;
+    const cy = h / 2 - (y / 100) * h * 0.4;
+    decalCtx.save();
+    decalCtx.globalAlpha = opacity / 100;
+    decalCtx.translate(cx, cy);
+    decalCtx.rotate((rot * Math.PI) / 180);
+    decalCtx.drawImage(img, -size / 2, -size / 2, size, size);
+    decalCtx.restore();
+  }
+
+  // Text
+  if (STATE.text.content) {
+    const { content, font, size, color, x, y, rot } = STATE.text;
+    const cx = w / 2 + (x / 100) * w * 0.4;
+    const cy = h / 2 - (y / 100) * h * 0.4;
+    decalCtx.save();
+    decalCtx.translate(cx, cy);
+    decalCtx.rotate((rot * Math.PI) / 180);
+    decalCtx.font = `bold ${size}px ${font}`;
+    decalCtx.fillStyle = color;
+    decalCtx.textAlign = 'center';
+    decalCtx.textBaseline = 'middle';
+    // Shadow for readability
+    decalCtx.shadowColor = 'rgba(0,0,0,0.5)';
+    decalCtx.shadowBlur = 8;
+    decalCtx.fillText(content, 0, 0);
+    decalCtx.restore();
+  }
+
+  if (decalTexture) {
+    decalTexture.needsUpdate = true;
+  }
+
+  updateRightPanel();
+  setTimeout(updatePreviewThumb, 100);
+}
+
+// ── RENDER LOOP ─────────────────────────────────────────────
+
+function animate() {
+  animFrame = requestAnimationFrame(animate);
+
+  // Smooth camera
+  spherical.theta += (sphericalTarget.theta - spherical.theta) * 0.1;
+  spherical.phi += (sphericalTarget.phi - spherical.phi) * 0.1;
+  radius += (radiusTarget - radius) * 0.1;
+  panOffset.x += (panTarget.x - panOffset.x) * 0.1;
+  panOffset.y += (panTarget.y - panOffset.y) * 0.1;
+
+  // Auto rotate
+  if (STATE.autoRotate) {
+    sphericalTarget.theta += 0.005;
+  }
+
+  const sinPhi = Math.sin(spherical.phi);
+  camera.position.set(
+    radius * sinPhi * Math.sin(spherical.theta) + panOffset.x,
+    radius * Math.cos(spherical.phi) + panOffset.y,
+    radius * sinPhi * Math.cos(spherical.theta)
+  );
+  camera.lookAt(panOffset.x, panOffset.y, 0);
+
+  renderer.render(scene, camera);
+}
+
+// ── MOUSE CONTROLS ──────────────────────────────────────────
+
+function onMouseDown(e) {
+  isDragging = true;
+  mouseBtn = e.button;
+  prevMouse = { x: e.clientX, y: e.clientY };
+}
+
+function onMouseMove(e) {
+  if (!isDragging) return;
+  const dx = e.clientX - prevMouse.x;
+  const dy = e.clientY - prevMouse.y;
+  prevMouse = { x: e.clientX, y: e.clientY };
+
+  if (mouseBtn === 0) {
+    // Left drag: rotate
+    sphericalTarget.theta -= dx * 0.008;
+    sphericalTarget.phi -= dy * 0.008;
+    sphericalTarget.phi = Math.max(0.15, Math.min(Math.PI - 0.15, sphericalTarget.phi));
+  } else if (mouseBtn === 2) {
+    // Right drag: pan
+    panTarget.x -= dx * 0.003;
+    panTarget.y += dy * 0.003;
+  }
+}
+
+function onMouseUp() {
+  isDragging = false;
+  mouseBtn = -1;
+}
+
+function onWheel(e) {
+  e.preventDefault();
+  radiusTarget = Math.max(1.5, Math.min(8, radiusTarget + e.deltaY * 0.005));
+}
+
+function onResize() {
+  const container = document.getElementById('canvas-area');
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+// ── ACTIONS ────────────────────────────────────────────────
+
+function setGarment(type) {
+  STATE.garment = type;
+  document.querySelectorAll('.garment-tab').forEach(t => t.classList.toggle('active', t.dataset.garment === type));
+  document.getElementById('current-garment-label').textContent = { cap: 'Gorra', tshirt: 'Playera', hoodie: 'Hoodie' }[type];
+  document.getElementById('info-garment').textContent = { cap: 'Gorra', tshirt: 'Playera', hoodie: 'Hoodie' }[type];
+  buildGarment(type);
+  showToast('🧢 Prenda cambiada: ' + { cap: 'Gorra', tshirt: 'Playera', hoodie: 'Hoodie' }[type]);
+}
+
+function setView(view) {
+  STATE.view = view;
+  STATE.autoRotate = false;
+
+  document.getElementById('view-360').classList.remove('active');
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + view)?.classList.add('active');
+
+  const labels = { front: 'Frontal', side: 'Lateral', back: 'Trasera' };
+  document.getElementById('current-view-label').textContent = labels[view];
+
+  const views = {
+    front: { theta: 0, phi: Math.PI / 2 },
+    side: { theta: -Math.PI / 2, phi: Math.PI / 2 },
+    back: { theta: Math.PI, phi: Math.PI / 2 }
+  };
+
+  sphericalTarget.theta = views[view].theta;
+  sphericalTarget.phi = views[view].phi;
+  radiusTarget = 3.2;
+  panTarget = { x: 0, y: 0 };
+}
+
+function toggle360() {
+  STATE.autoRotate = !STATE.autoRotate;
+  document.getElementById('view-360').classList.toggle('active', STATE.autoRotate);
+  if (STATE.autoRotate) showToast('↺ Rotación automática activada');
+}
+
+// Color swatches
+const SWATCHES = [
+  '#ffffff', '#f5f5f4', '#e7e5e4', '#d6d3d1', '#a8a29e', '#78716c',
+  '#000000', '#1c1917', '#292524', '#44403c', '#57534e', '#79716b',
+  '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e',
+  '#06b6d4', '#3b82f6', '#6366f1', '#a855f7', '#ec4899', '#f43f5e',
+  '#0ea5e9', '#10b981', '#14b8a6', '#8b5cf6', '#d946ef', '#f97316',
+  '#1e3a5f', '#7c3aed', '#be123c', '#065f46', '#92400e', '#1e40af'
+];
+
+function buildSwatches() {
+  const grid = document.getElementById('swatch-grid');
+  SWATCHES.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (c === STATE.color ? ' active' : '');
+    sw.style.background = c;
+    sw.title = c;
+    sw.onclick = () => applyColor(c, sw);
+    grid.appendChild(sw);
+  });
+}
+
+function applyColor(c, swatchEl) {
+  STATE.color = c;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  if (swatchEl) swatchEl.classList.add('active');
+  document.getElementById('custom-color').value = c;
+  rebuildMaterials();
+  updateRightPanel();
+}
+
+function applyCustomColor(c) {
+  STATE.color = c;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  rebuildMaterials();
+  updateRightPanel();
+}
+
+function rebuildMaterials() {
+  // Rebuild garment to apply new color/material
+  buildGarment(STATE.garment);
+}
+
+function setMaterial(type) {
+  STATE.material = type;
+  document.querySelectorAll('[id^="mat-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('mat-' + type).classList.add('active');
+  document.getElementById('info-material').textContent = { matte: 'Mate', glossy: 'Brillante', fabric: 'Tela' }[type];
+  rebuildMaterials();
+}
+
+function setLightIntensity(v) {
+  STATE.lightIntensity = v / 100;
+  const light = scene.getObjectByName('dirlight');
+  if (light) light.intensity = STATE.lightIntensity * 2.5;
+}
+
+function setAmbientLight(v) {
+  STATE.ambientLight = v / 100;
+  const light = scene.getObjectByName('ambient');
+  if (light) light.intensity = STATE.ambientLight * 3;
+}
+
+// ── LOGO ───────────────────────────────────────────────────
+
+function loadLogo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      STATE.logo = { img, scale: 30, x: 0, y: 0, rot: 0, opacity: 100 };
+      document.getElementById('logo-controls').style.display = 'block';
+      document.getElementById('upload-zone').innerHTML = `
+        <div class="upload-icon">✅</div>
+        <p><strong style="color:var(--text-0)">${file.name}</strong><br>Logo cargado correctamente</p>
+      `;
+      document.getElementById('info-logo').textContent = file.name.substring(0, 14) + (file.name.length > 14 ? '…' : '');
+      updateDecal();
+      showToast('🖼️ Logo cargado');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateLogo() {
+  if (!STATE.logo) return;
+  STATE.logo.scale = +document.getElementById('logo-scale').value;
+  STATE.logo.x = +document.getElementById('logo-x').value;
+  STATE.logo.y = +document.getElementById('logo-y').value;
+  STATE.logo.rot = +document.getElementById('logo-rot').value;
+  STATE.logo.opacity = +document.getElementById('logo-opacity').value;
+  updateDecal();
+}
+
+function removeLogo() {
+  STATE.logo = null;
+  document.getElementById('logo-controls').style.display = 'none';
+  document.getElementById('upload-zone').innerHTML = `
+    <div class="upload-icon">🖼️</div>
+    <p>Arrastra un PNG aquí<br>o haz clic para seleccionar</p>
+  `;
+  document.getElementById('logo-input').value = '';
+  document.getElementById('info-logo').textContent = 'Ninguno';
+  updateDecal();
+  showToast('🗑️ Logo eliminado');
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('drag-over');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const fakeEvent = { target: { files: [file] } };
+    loadLogo(fakeEvent);
+  }
+}
+
+// ── TEXT ────────────────────────────────────────────────────
+
+function updateText() {
+  STATE.text.content = document.getElementById('text-input').value;
+  STATE.text.font = document.getElementById('text-font').value;
+  STATE.text.size = +document.getElementById('text-size').value;
+  STATE.text.color = document.getElementById('text-color').value;
+  STATE.text.x = +document.getElementById('text-x').value;
+  STATE.text.y = +document.getElementById('text-y').value;
+  STATE.text.rot = +document.getElementById('text-rot').value;
+
+  const hexInput = document.getElementById('text-color-hex');
+  hexInput.value = STATE.text.color;
+
+  document.getElementById('info-text').textContent = STATE.text.content || '—';
+  updateDecal();
+}
+
+function syncTextColor(val) {
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+    document.getElementById('text-color').value = val;
+    STATE.text.color = val;
+    updateDecal();
+  }
+}
+
+function clearText() {
+  document.getElementById('text-input').value = '';
+  STATE.text.content = '';
+  document.getElementById('info-text').textContent = '—';
+  updateDecal();
+  showToast('🗑️ Texto eliminado');
+}
+
+// ── SIDEBAR PANELS ──────────────────────────────────────────
+
+function showPanel(name) {
+  document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  // Find and activate the tab
+  const tabs = document.querySelectorAll('.sidebar-tab');
+  const names = ['color', 'logo', 'text', 'history'];
+  const idx = names.indexOf(name);
+  if (tabs[idx]) tabs[idx].classList.add('active');
+
+  if (name === 'history') renderHistory();
+}
+
+// ── RIGHT PANEL ─────────────────────────────────────────────
+
+function updateRightPanel() {
+  const dot = document.getElementById('info-color-dot');
+  const hex = document.getElementById('info-color-hex');
+  if (dot) dot.style.background = STATE.color;
+  if (hex) hex.textContent = STATE.color;
+}
+
+function updatePreviewThumb() {
+  try {
+    const thumb = document.getElementById('preview-thumb');
+    const imgData = renderer.domElement.toDataURL('image/png');
+    thumb.innerHTML = `<img src="${imgData}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
+  } catch(e) {}
+}
+
+// ── HISTORY ─────────────────────────────────────────────────
+
+function saveDesign() {
+  const design = {
+    id: Date.now(),
+    name: `Diseño ${STATE.history.length + 1}`,
+    garment: STATE.garment,
+    color: STATE.color,
+    material: STATE.material,
+    text: { ...STATE.text },
+    logoPresent: !!STATE.logo,
+    logoConfig: STATE.logo ? { scale: STATE.logo.scale, x: STATE.logo.x, y: STATE.logo.y, rot: STATE.logo.rot, opacity: STATE.logo.opacity } : null,
+    date: new Date().toLocaleString('es-MX'),
+    emoji: { cap: '🧢', tshirt: '👕', hoodie: '🧥' }[STATE.garment]
+  };
+
+  STATE.history.unshift(design);
+  if (STATE.history.length > 20) STATE.history = STATE.history.slice(0, 20);
+  localStorage.setItem('stitch_history', JSON.stringify(STATE.history));
+  renderHistory();
+  showToast('💾 Diseño guardado', 'success');
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (STATE.history.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-3);font-size:12px">
+      No hay diseños guardados.<br>Usa el botón "Guardar" para empezar.
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = STATE.history.map((d, i) => `
+    <div class="history-item" onclick="loadDesign(${i})">
+      <div class="history-thumb">
+        <span style="font-size:20px">${d.emoji || '👕'}</span>
+      </div>
+      <div class="history-info">
+        <div class="history-name">${d.name}</div>
+        <div class="history-time">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${d.color};border:1px solid rgba(255,255,255,.2);margin-right:4px;vertical-align:middle"></span>
+          ${d.date}
+        </div>
+      </div>
+      <div class="history-del" onclick="event.stopPropagation(); deleteDesign(${i})" title="Eliminar">✕</div>
+    </div>
+  `).join('');
+}
+
+function loadDesign(idx) {
+  const d = STATE.history[idx];
+  if (!d) return;
+
+  STATE.garment = d.garment;
+  STATE.color = d.color;
+  STATE.material = d.material;
+  STATE.text = { ...d.text };
+
+  // Update UI
+  document.querySelectorAll('.garment-tab').forEach(t => t.classList.toggle('active', t.dataset.garment === d.garment));
+  document.getElementById('current-garment-label').textContent = { cap: 'Gorra', tshirt: 'Playera', hoodie: 'Hoodie' }[d.garment];
+  document.getElementById('info-garment').textContent = { cap: 'Gorra', tshirt: 'Playera', hoodie: 'Hoodie' }[d.garment];
+  document.getElementById('custom-color').value = d.color;
+  document.getElementById('text-input').value = d.text.content || '';
+  document.getElementById('text-color').value = d.text.color || '#ffffff';
+  document.getElementById('text-color-hex').value = d.text.color || '#ffffff';
+  if (document.getElementById('text-size')) document.getElementById('text-size').value = d.text.size || 48;
+
+  document.querySelectorAll('[id^="mat-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('mat-' + d.material)?.classList.add('active');
+
+  buildGarment(d.garment);
+  updateRightPanel();
+  showToast('📂 Diseño cargado: ' + d.name);
+}
+
+function deleteDesign(idx) {
+  STATE.history.splice(idx, 1);
+  localStorage.setItem('stitch_history', JSON.stringify(STATE.history));
+  renderHistory();
+  showToast('🗑️ Diseño eliminado');
+}
+
+function clearAllHistory() {
+  if (!confirm('¿Eliminar todo el historial?')) return;
+  STATE.history = [];
+  localStorage.removeItem('stitch_history');
+  renderHistory();
+  showToast('🗑️ Historial limpiado');
+}
+
+// ── EXPORT ─────────────────────────────────────────────────
+
+function openExportModal() {
+  document.getElementById('export-modal').classList.add('open');
+}
+
+function closeExportModal() {
+  document.getElementById('export-modal').classList.remove('open');
+}
+
+function exportPNG(view) {
+  // Set camera to requested view
+  const camViews = {
+    front: { theta: 0, phi: Math.PI / 2 },
+    side: { theta: -Math.PI / 2, phi: Math.PI / 2 },
+    back: { theta: Math.PI, phi: Math.PI / 2 }
+  };
+
+  const original = { theta: spherical.theta, phi: spherical.phi };
+  spherical.theta = camViews[view]?.theta ?? spherical.theta;
+  spherical.phi = camViews[view]?.phi ?? spherical.phi;
+
+  const sinPhi = Math.sin(spherical.phi);
+  camera.position.set(
+    radius * sinPhi * Math.sin(spherical.theta),
+    radius * Math.cos(spherical.phi) + panOffset.y,
+    radius * sinPhi * Math.cos(spherical.theta)
+  );
+  camera.lookAt(0, panOffset.y, 0);
+  renderer.render(scene, camera);
+
+  // Download
+  const dataURL = renderer.domElement.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.download = `stitch_${STATE.garment}_${view}_${Date.now()}.png`;
+  a.href = dataURL;
+  a.click();
+
+  // Restore
+  spherical.theta = original.theta;
+  spherical.phi = original.phi;
+  showToast('📸 PNG exportado: vista ' + view, 'success');
+  closeExportModal();
+}
+
+function exportJSON() {
+  const config = {
+    version: '1.0',
+    exported: new Date().toISOString(),
+    garment: STATE.garment,
+    color: STATE.color,
+    material: STATE.material,
+    text: { ...STATE.text },
+    logo: STATE.logo ? {
+      scale: STATE.logo.scale,
+      x: STATE.logo.x,
+      y: STATE.logo.y,
+      rot: STATE.logo.rot,
+      opacity: STATE.logo.opacity
+    } : null,
+    notes: 'Generado con STITCH — Plataforma de Diseño 3D'
+  };
+
+  const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.download = `stitch_config_${Date.now()}.json`;
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  showToast('📄 JSON exportado', 'success');
+  closeExportModal();
+}
+
+function exportAll() {
+  showToast('📦 Exportando pack completo...', 'success');
+  setTimeout(() => exportPNG('front'), 100);
+  setTimeout(() => exportPNG('back'), 600);
+  setTimeout(() => exportPNG('side'), 1100);
+  setTimeout(() => exportJSON(), 1600);
+  setTimeout(() => closeExportModal(), 1700);
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+
+let toastTimer = null;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 2800);
+}
+
+// ── KEYBOARD SHORTCUTS ──────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'f' || e.key === 'F') setView('front');
+  if (e.key === 'l' || e.key === 'L') setView('side');
+  if (e.key === 't' || e.key === 'T') setView('back');
+  if (e.key === 'r' || e.key === 'R') toggle360();
+  if (e.key === 's' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveDesign(); }
+  if (e.key === 'Escape') closeExportModal();
+});
+
+// Close modal on backdrop click
+document.getElementById('export-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeExportModal();
+});
+
+// ── INIT ───────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildSwatches();
+  initThree();
+  renderHistory();
+  updateRightPanel();
+
+  // Welcome toast
+  setTimeout(() => showToast('✦ STITCH cargado — Bienvenido al estudio 3D'), 600);
+
+  // Auto preview update
+  setInterval(updatePreviewThumb, 3000);
+});
+
+</script>
+</body>
+</html>
