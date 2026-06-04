@@ -72,61 +72,73 @@ Integra fácilmente plataformas externas mediante el sistema de conectores. Incl
 
 ---
 
-## 🛠️ Instalación y Uso Rápido
+## 🚀 Cómo Empezar en 3 Pasos Fáciles
 
-### Requisitos Previos
-- Python 3.12 o superior
-- Git
-- (Opcional) Docker y Docker Compose para despliegue en contenedores
+¿No tienes experiencia con líneas de comando? ¡No te preocupes! Tenemos opciones para todos los niveles.
 
-### Opción 1: Instalación Local (Desarrollo/Testing)
+### 🖱️ Opción Fácil: Interfaz Gráfica (Recomendado para Principiantes)
+1. **Descarga**: Haz clic en el botón verde **"Code"** arriba y selecciona **"Download ZIP"**
+2. **Extrae**: Descomprime el archivo ZIP en una carpeta fácil de encontrar (como tu Escritorio)
+3. **Ejecuta**: 
+   - En Windows: Haz doble clic en el archivo `start-windows.bat`
+   - En Mac/Linux: Haz doble clic en `start-mac-linux.sh` (o ejecútalo desde Terminal)
+4. **¡Listo!**: Espera a que aparezca "Servidor iniciado" y abre tu navegador en:
+   - 🌐 **Página de inicio**: http://localhost:8000
+   - 📊 **Panel de control**: http://localhost:8000/dashboard
+   - 📚 **Documentación API**: http://localhost:8000/docs
+
+> 💡 **Primer uso**: Regístrate con tu email y contraseña en la página de inicio para comenzar a usar todas las funciones gratuitas.
+
+### 💻 Opción Para Desarrolladores (Con Terminal)
+Si te sientes cómodo con la terminal, estos son los comandos estándar:
 
 ```bash
-# 1. Clonar el repositorio
+# Obtener el código
 git clone https://github.com/AXM-DEVs/taq-engine.git
 cd taq-engine
 
-# 2. Crear entorno virtual (recomendado)
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-
-# 3. Instalar dependencias
+# Preparar entorno (una sola vez)
 pip install -r requirements.txt
 
-# 4. Inicializar la base de datos y descargar playbooks de ejemplo
-make dev-setup
+# Iniciar servidor (con recarga automática durante desarrollo)
+python -m taq.main --host 0.0.0.0 --port 8000 --reload
 
-# 5. Iniciar el servidor
-make dev
-
-# 6. Acceder a:
-#    - API Docs: http://localhost:8000/docs
-#    - Landing Page: http://localhost:8000/
-#    - Dashboard: http://localhost:8000/dashboard
-#    - System: http://localhost:8000/system
+# Visitar: http://localhost:8000
 ```
 
-### Opción 2: Despliegue con Docker (Recomendado para Producción)
+### 🐳 Opción Docker (Para Equipos y Producción)
+Ideal para equipos que quieren consistencia entre ambientes:
 
 ```bash
-# 1. Clonar el repositorio
+# Obtener el código
 git clone https://github.com/AXM-DEVs/taq-engine.git
 cd taq-engine
 
-# 2. Copiar y configurar variables de entorno
+# Configurar (solo la primera vez)
 cp .env.example .env
-# Editar .env con tu configuración (ver sección de configuración abajo)
+# Edita .env y pone una clave secreta: TAQ_SECRET_KEY=tu-clave-super-secreta-aqui
 
-# 3. Construir y levantar los servicios
+# Iniciar todo con un comando
 docker-compose -f docker-compose.production.yml up -d
 
-# 4. El servicio estará disponible en:
-#    - http://tu-dominio.com (a través de NGINX)
-#    - API Docs: http://tu-dominio.com/docs
+# Acceder a través de tu navegador:
+# - http://localhost (interfaz web)
+# - http://localhost/docs (documentación API)
 ```
 
-### Opción 3: Despliegue en Kubernetes
-Ver los manifiestos de ejemplo en la [Guía de Deployment en Producción](docs/production_deployment.md).
+### 🔑 Tu Primer Registro (30 segundos)
+Una vez que el servidor esté corriendo:
+1. Ve a http://localhost:8000
+2. Haz clic en "Registrarse"
+3. Ingresa tu email y una contraseña (mínimo 8 caracteres)
+4. ¡Listo! Ya puedes comenzar a crear investigaciones
+
+### 📱 ¿Qué Verás en tu Navegador?
+- **Página de inicio**: Información sobre TaQ Engine y formulario de login/registro
+- **Dashboard**: Vista gráfica de tus investigaciones, estadísticas y botón para crear nuevas
+- **Panel de sistema**: Herramientas básicas de administración (útil para avancidados)
+
+> 🌟 **Tip**: La primera vez que inicies el servidor, tardará unos segundos en preparar la base de datos. ¡Es normal! Busca el mensaje "Aplicación lista" en la terminal o en los logs de Docker.
 
 ---
 
