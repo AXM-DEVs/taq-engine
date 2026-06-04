@@ -1,0 +1,26 @@
+name: email_investigation
+version: 1.0
+description: >
+  Generic email investigation: extract username and domain, compute score.
+
+trigger:
+  type: seed
+  accepts: [email]
+
+steps:
+  - id: extract_user
+    type: transform
+    script: extract_username_from_email
+
+  - id: extract_domain
+    type: transform
+    script: extract_domain_from_email
+
+  - id: score
+    type: scoring.compute
+    inputs: [extract_user, extract_domain]
+
+  - id: notify
+    type: notify
+    channel: log
+    message: "Investigation complete for {{ seed.value }}"

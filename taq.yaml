@@ -1,0 +1,26 @@
+debug: false
+secret_key: "change-me"
+
+database:
+  engine: sqlite
+  host: localhost
+  port: 5432
+  user: taq
+  password: taq
+  database: taq
+
+llm:
+  provider: ollama
+  model: "mistral:7b"
+  base_url: "http://localhost:11434"
+  api_key: ""
+  temperature: 0.1
+  max_tokens: 2048
+
+cache:
+  enabled: true
+  default_ttl: 300
+
+logging:
+  level: INFO
+  format: console
